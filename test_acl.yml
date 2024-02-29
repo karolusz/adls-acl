@@ -1,0 +1,40 @@
+# ADF-001 MI: dbe38667-aca9-4618-ab74-81012eed294b
+account: testingaclscripts
+containers:
+  - name: upload
+    acls:
+      - oid: "dbe38667-aca9-4618-ab74-81012eed294b"
+        type: "user"
+        acl: r-x
+      - oid: "6fb9dfb4-76e8-40dd-9211-db3e5c59e86f"
+        type: "user"
+        acl: --x
+    folders:
+      - name: File_Extract
+        acls:
+          - oid: "64cf340f-6e51-4e0e-8731-e0d5cc7f131e"
+            type: "group"
+            acl: rwx
+          - oid: "64cf340f-6e51-4e0e-8731-e0d5cc7f131e"
+            type: "group"
+            default_acl: rwx
+          - oid: "6fb9dfb4-76e8-40dd-9211-db3e5c59e86f"
+            type: "user"
+            acl: --x
+        folders:
+          - name: medvind
+            acls:
+              - oid: "6fb9dfb4-76e8-40dd-9211-db3e5c59e86f"
+                type: "user"
+                acl: --x
+            folders:
+              - name: mvworktimeex
+                acls:
+                  - oid: "6fb9dfb4-76e8-40dd-9211-db3e5c59e86f"
+                    type: "user"
+                    acl: rwx
+                    recursive: True
+                  - oid: "6fb9dfb4-76e8-40dd-9211-db3e5c59e86f"
+                    type: "user"
+                    default_acl: rwx
+                    recursive: True
