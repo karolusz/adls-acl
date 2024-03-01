@@ -1,0 +1,139 @@
+from typing import Self, Optional, Dict
+from dataclasses import dataclass
+
+
+@dataclass
+class Acl:
+    p_type: str
+    oid: str
+    permissions: str
+    scope: Optional[str] = None
+
+    @classmethod
+    def from_str(cls, acl_str: str):
+        """Returns an instance of Acl from string from get_access_control call"""
+        acl_str = acl_str.split(":")
+        if len(acl_str) == 3:
+            p_type, oid, permissions = acl_str
+            return Acl(p_type, oid, permissions)
+        elif len(acl_str) == 4:
+            scope, p_type, oid, permissions = acl_str
+            return Acl(p_type, oid, permissions, scope=scope)
+
+    @classmethod
+    def from_dict(cls, acl_dict: Dict):
+        """Returns an instance of Acl from a dict from yaml input"""
+        if "acl" in acl_dict:
+            acl = acl_dict["acl"]
+        else:
+            acl = acl_dict["default_acl"]
+        if "default" in acl_dict:
+            scope = acl_dict["scope"]
+        else:
+            scope = None
+
+        return Acl(acl_dict["type"], acl_dict["oid"], acl, scope=scope)
+
+    def __str__(self):
+        if self.scope is None:
+            s = f"{self.p_type}:{self.oid}:{self.permissions}"
+        else:
+            s = f"{self.scope}:{self.p_type}:{self.oid}:{self.permissions}"
+        return s
+
+    def is_default_owner(self):
+        """Checks if it is object owner ACL"""
+        return True if (self.oid == "" and self.p_type == "user") else False
+
+    def is_default_owner_group(self):
+        """Check if it is owner group ACL"""
+        return True if (self.oid == "" and self.p_type == "group") else False
+
+    def is_mask(self):
+        """Check if mask"""
+        return True if (self.p_type == "mask") else False
+
+
+class Node:
+    def __init__(self, name: str, parent=None):
+        self.name = name
+        self.children = []
+        self.parent = parent
+        self.acls = []
+
+    def __str__(self):
+        """Print node nicely"""
+        s = f"Path to node: {self.path}"
+        s += f"\nAcls from input:"
+        for acl in self.acls:
+            s += f"\n{str(acl)}"
+
+        return s
+
+    @property
+    def path(self):
+        """Get the path from root of the container to the Node"""
+        if self.parent is not None:
+            return f"{self.parent.path}/{self.name}"
+        else:
+            return f"{self.name}"
+
+    @property
+    def parent(self):
+        return self._parent
+
+    @parent.setter
+    def parent(self, value: Self):
+        """Sets a parent node. Also registers the child @parent"""
+        if value is not None:
+            if not isinstance(value, Node):
+                raise TypeError(f"Parent must be of type, {type(self)}")
+            self._parent = value
+            self._parent.add_child(self)
+        else:
+            self._parent = None
+
+    def add_acl(self, acl: Acl):
+        """Append Acl to the list of Acls"""
+        if not isinstance(acl, Acl):
+            raise TypeError(f"Acl must be of type, {type(Acl)}")
+        self.acls.append(acl)
+
+    def add_child(self, child: Acl):
+        self.children.append(child)
+
+    def create_location(self, client):
+        pass
+
+    def set_acls(self, client):
+        pass
+
+    def process(self, client, pushed_down_acl=[]):
+        """Processes the node"""
+        for acl in pushed_down_acl:
+            self.add_acl(acl)
+
+        self._create_location(client)
+        default_acls = self._set_acls(client)
+
+        for child_node in self.children:
+            child_node.process(default_acls)
+
+
+class RootNode(Node):
+    def __init__(self, name: str, parent=None):
+        super().__init__(name, parent)
+
+    def create_location(self, client):
+        pass
+
+
+def bfs(root: RootNode):
+    """Breadth-first traversal of the tree"""
+    queue = [root]
+
+    while queue:
+        node = queue.pop()
+        for child_node in node.children:
+            queue.append(child_node)
+        yield node
