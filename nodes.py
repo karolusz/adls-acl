@@ -25,14 +25,13 @@ class Acl:
         """Returns an instance of Acl from a dict from yaml input"""
         if "acl" in acl_dict:
             acl = acl_dict["acl"]
-        else:
-            acl = acl_dict["default_acl"]
-        if "default" in acl_dict:
+        if "scope" in acl_dict:
             scope = acl_dict["scope"]
         else:
             scope = None
 
-        return Acl(acl_dict["type"], acl_dict["oid"], acl, scope=scope)
+        acl = Acl(acl_dict["type"], acl_dict["oid"], acl, scope=scope)
+        return acl
 
     def __str__(self):
         if self.scope is None:
@@ -41,11 +40,21 @@ class Acl:
             s = f"{self.scope}:{self.p_type}:{self.oid}:{self.permissions}"
         return s
 
-    def is_default_owner(self):
+    def __eq__(self, other):
+        return (
+            self.p_type == other.p_type
+            and self.oid == other.oid
+            and self.scope == other.scope
+        )
+
+    def __hash__(self):
+        return hash((self.p_type, self.oid, self.scope))
+
+    def is_owner(self):
         """Checks if it is object owner ACL"""
         return True if (self.oid == "" and self.p_type == "user") else False
 
-    def is_default_owner_group(self):
+    def is_owner_group(self):
         """Check if it is owner group ACL"""
         return True if (self.oid == "" and self.p_type == "group") else False
 
@@ -53,13 +62,21 @@ class Acl:
         """Check if mask"""
         return True if (self.p_type == "mask") else False
 
+    def is_other(self):
+        """Check if it is ACL for other"""
+        return True if (self.p_type == "other") else False
+
+    def is_default(self):
+        """Check if ACL is default"""
+        return True if (self.scope == "default") else False
+
 
 class Node:
     def __init__(self, name: str, parent=None):
         self.name = name
         self.children = []
         self.parent = parent
-        self.acls = []
+        self.acls = set()
 
     def __str__(self):
         """Print node nicely"""
@@ -73,7 +90,7 @@ class Node:
     @property
     def path(self):
         """Get the path from root of the container to the Node"""
-        if self.parent is not None:
+        if self.parent is not None and not isinstance(self.parent, RootNode):
             return f"{self.parent.path}/{self.name}"
         else:
             return f"{self.name}"
@@ -93,20 +110,20 @@ class Node:
         else:
             self._parent = None
 
+    def get_root(self):
+        root = self
+        while root.parent is not None:
+            root = root.parent
+        return root
+
     def add_acl(self, acl: Acl):
         """Append Acl to the list of Acls"""
         if not isinstance(acl, Acl):
             raise TypeError(f"Acl must be of type, {type(Acl)}")
-        self.acls.append(acl)
+        self.acls.update((acl,))
 
     def add_child(self, child: Acl):
         self.children.append(child)
-
-    def create_location(self, client):
-        pass
-
-    def set_acls(self, client):
-        pass
 
     def process(self, client, pushed_down_acl=[]):
         """Processes the node"""
@@ -123,9 +140,6 @@ class Node:
 class RootNode(Node):
     def __init__(self, name: str, parent=None):
         super().__init__(name, parent)
-
-    def create_location(self, client):
-        pass
 
 
 def bfs(root: RootNode):

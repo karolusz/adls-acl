@@ -26,7 +26,7 @@ from azure.identity import DefaultAzureCredential, AzureCliCredential
 from abc import ABC, abstractmethod
 from typing import List, Dict, Optional, Self
 from dataclasses import dataclass
-from orchestrator import orchestrator_factory
+from orchestrator import orchestrator_factory, processor_selector
 from nodes import RootNode, Node, bfs, Acl
 
 
@@ -123,9 +123,17 @@ if __name__ == "__main__":
     sc = get_service_client_token_credential(acls_config["account"])
 
     if args.mode == "update":
-        pass
+        print("NOT IMPLEMENTED")
+        raise ValueError
+
     if args.mode == "authoritative":
         tree_root = process_acl_config(acls_config["containers"][0])
 
-    orchestrator = orchestrator_factory(args.mode)(tree_root)
-    orchestrator.process_tree()
+    orchestrator = orchestrator_factory(args.mode)(
+        account_name=acls_config["account"], root=tree_root
+    )
+
+    for node in bfs(tree_root):
+        processor = processor_selector(node)
+        dc = processor.get_dir_client(node, sc)
+        processor.set_acls(node, dc)

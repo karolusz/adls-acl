@@ -17,7 +17,8 @@ containers:
             acl: rwx
           - oid: "64cf340f-6e51-4e0e-8731-e0d5cc7f131e"
             type: "group"
-            default_acl: rwx
+            acl: rwx
+            scope: default
           - oid: "6fb9dfb4-76e8-40dd-9211-db3e5c59e86f"
             type: "user"
             acl: --x
@@ -36,5 +37,6 @@ containers:
                     recursive: True
                   - oid: "6fb9dfb4-76e8-40dd-9211-db3e5c59e86f"
                     type: "user"
-                    default_acl: rwx
+                    acl: rwx
+                    scope: default
                     recursive: True
