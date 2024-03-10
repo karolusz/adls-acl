@@ -126,13 +126,15 @@ if __name__ == "__main__":
         print("NOT IMPLEMENTED")
         raise ValueError
 
+    # TODO Process each container in parallel
     if args.mode == "authoritative":
         tree_root = process_acl_config(acls_config["containers"][0])
 
-    orchestrator = orchestrator_factory(args.mode)(
-        account_name=acls_config["account"], root=tree_root
-    )
+    # orchestrator = orchestrator_factory(args.mode)(
+    #    account_name=acls_config["account"], root=tree_root
+    # )
 
+    # TODO: This should be handled by an orhcestrator?
     for node in bfs(tree_root):
         processor = processor_selector(node)
         dc = processor.get_dir_client(node, sc)

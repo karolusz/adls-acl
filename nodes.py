@@ -125,17 +125,6 @@ class Node:
     def add_child(self, child: Acl):
         self.children.append(child)
 
-    def process(self, client, pushed_down_acl=[]):
-        """Processes the node"""
-        for acl in pushed_down_acl:
-            self.add_acl(acl)
-
-        self._create_location(client)
-        default_acls = self._set_acls(client)
-
-        for child_node in self.children:
-            child_node.process(default_acls)
-
 
 class RootNode(Node):
     def __init__(self, name: str, parent=None):

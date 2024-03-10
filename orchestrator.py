@@ -6,6 +6,7 @@ from azure.identity import DefaultAzureCredential, AzureCliCredential
 from azure.core.exceptions import ResourceExistsError
 from nodes import RootNode, Node, bfs, Acl
 from abc import ABC, abstractmethod
+from typing import Set
 
 
 class Orchestrator:
@@ -47,40 +48,52 @@ class ClientWithACLSupport(ABC):
     @abstractmethod
     def set_access_control(): ...
 
-    @abstractmethod
-    def update_permissions_recursively(): ...
+    # Not needed until update mode is implemented
+    # @abstractmethod
+    # def update_permissions_recursively(): ...
+
+
+def _get_acls_to_preserve(current_acls: str) -> Set[Acl]:
+    """Determines which ACLs in the current Node should be preserved in the update"""
+    acls_to_preserve = set()
+
+    for acl_str in current_acls.split(","):
+        acl = Acl.from_str(acl_str)
+        if any([acl.is_mask(), acl.is_other(), acl.is_owner(), acl.is_owner_group()]):
+            acls_to_preserve.update((acl,))
+
+    return acls_to_preserve
+
+
+def _set_acls(client: DataLakeDirectoryClient, acls: Set[Acl]) -> None:
+    """Set ACLs from the set on the node"""
+    print("new acls")
+    for acl in acls:
+        print(acl)
+        client.set_access_control(acl=acl)
+
+
+def _pushdown_acls(node: Node, acls: Set[Acl]) -> None:
+    """Pushdown selected ACLs to the children of the node"""
+    for child_node in node.children:
+        child_node.acls.update(acls)
 
 
 class Processor(ABC):
     @abstractmethod
     def set_acls(self, node: Node, client: DataLakeDirectoryClient):
-        # Get current ACLs to presercve ACLs for
+        # Get current ACLs to preseve ACLs for
         # Owner, Owner Group, mask, and other (unless specified in input)
         current_acls = client.get_access_control()["acl"]
-        acls_to_preserve = set()
-
-        for acl_str in current_acls.split(","):
-            acl = Acl.from_str(acl_str)
-            if any(
-                [acl.is_mask(), acl.is_other(), acl.is_owner(), acl.is_owner_group()]
-            ):
-                acls_to_preserve.update((acl,))
-
-        # Catch all default acls from input acls
+        acls_to_preserve = _get_acls_to_preserve(current_acls)
         acls_to_pushdown = set([acl for acl in node.acls if acl.is_default()])
 
-        # Update ACLs
+        # Collect ACLs to set
         new_acls = node.acls
         new_acls.update(acls_to_preserve)
 
-        print("new acls")
-        for acl in new_acls:
-            print(acl)
-            client.set_access_control(acl=acl)
-
-        # Push down acls to child nodes
-        for child_node in node.children:
-            child_node.acls.update(acls_to_pushdown)
+        _set_acls(client, new_acls)
+        _pushdown_acls(node, acls_to_pushdown)
 
     @abstractmethod
     def get_dir_client() -> ClientWithACLSupport: ...
