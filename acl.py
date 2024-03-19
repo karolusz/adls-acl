@@ -13,7 +13,7 @@
 # In "authoritative" mode the default acls will have to be pushed down from parent nodes to children.
 # How to handle recursive ACLs? Another pass at the end?
 #
-import logging, yaml, re, argparse
+import logging, re, argparse
 from azure.storage.filedatalake import (
     DataLakeServiceClient,
     DataLakeDirectoryClient,
@@ -26,77 +26,9 @@ from azure.identity import DefaultAzureCredential, AzureCliCredential
 from abc import ABC, abstractmethod
 from typing import List, Dict, Optional, Self
 from dataclasses import dataclass
-from orchestrator import orchestrator_factory, processor_selector
+from orchestrator import Orchestrator
 from nodes import RootNode, Node, bfs, Acl
-
-
-class ClientWithACLSupport(ABC):
-    @abstractmethod
-    def get_access_control():
-        pass
-
-    @abstractmethod
-    def set_access_control():
-        pass
-
-    @abstractmethod
-    def update_permissions_recursively():
-        pass
-
-
-class NodeInterface(ABC):
-    @abstractmethod
-    def create_location():
-        pass
-
-    @abstractmethod
-    def set_acl():
-        pass
-
-    @abstractmethod
-    def add_child():
-        pass
-
-
-def get_service_client_token_credential(account_name: str) -> DataLakeServiceClient:
-    account_url = f"https://{account_name}.dfs.core.windows.net"
-    token_credential = DefaultAzureCredential()
-    # token_credential = AzureCliCredential()
-    service_client = DataLakeServiceClient(account_url, credential=token_credential)
-
-    return service_client
-
-
-def get_directory_client(
-    container: str, parent_dir: str, service_client: DataLakeServiceClient
-) -> DataLakeDirectoryClient:
-
-    directory_client = service_client.get_file_system_client(
-        file_system=container
-    ).get_directory_client(parent_dir)
-
-    return directory_client
-
-
-def add_folder_nodes(parent_node: Node, folder: Dict):
-    node = Node(folder["name"], parent=parent_node)
-    for acl in folder["acls"]:
-        node.add_acl(Acl.from_dict(acl))
-
-    if "folders" in folder:
-        for subfolder in folder["folders"]:
-            add_folder_nodes(node, subfolder)
-
-
-def process_acl_config(container_config):
-    root_node = RootNode(container_config["name"])
-    for acl in container_config["acls"]:
-        root_node.add_acl(Acl.from_dict(acl))
-
-    for folder in container_config["folders"]:
-        add_folder_nodes(root_node, folder)
-
-    return root_node
+from input_parser import process_acl_config, config_from_yaml
 
 
 if __name__ == "__main__":
@@ -113,29 +45,16 @@ if __name__ == "__main__":
         default="update",
     )
     args = parser.parse_args()
-    account_name = "testingaclscripts"
 
     # load_dotenv(".env")
-
-    with open(args.config_file, "r") as file:
-        acls_config = yaml.safe_load(file)
-
-    sc = get_service_client_token_credential(acls_config["account"])
+    
+    acls_config = config_from_yaml(args.config_file)
 
     if args.mode == "update":
         print("NOT IMPLEMENTED")
         raise ValueError
 
-    # TODO Process each container in parallel
-    if args.mode == "authoritative":
-        tree_root = process_acl_config(acls_config["containers"][0])
+    for container in acls_config["containers"]:
+        tree_root = process_acl_config(container)
+        Orchestrator(tree_root, acls_config["account"]).process_tree()
 
-    # orchestrator = orchestrator_factory(args.mode)(
-    #    account_name=acls_config["account"], root=tree_root
-    # )
-
-    # TODO: This should be handled by an orhcestrator?
-    for node in bfs(tree_root):
-        processor = processor_selector(node)
-        dc = processor.get_dir_client(node, sc)
-        processor.set_acls(node, dc)

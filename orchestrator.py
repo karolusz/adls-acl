@@ -10,35 +10,15 @@ from typing import Set
 
 
 class Orchestrator:
-    def __init__(self, account_name: str, root: RootNode):
+    def __init__(self, root: RootNode, account_name: str):
         self.root = root
+        self.sc = _get_service_client_token_credential(account_name)
 
-
-class OrchestratorAuthoritative:
-    def __init__(self, account_name: str, root: RootNode):
-        self.root = root
-        self.sc = self._get_service_client_token_credential(account_name)
-
-    def _get_service_client_token_credential(
-        self,
-        account_name: str,
-    ) -> DataLakeServiceClient:
-        account_url = f"https://{account_name}.dfs.core.windows.net"
-        token_credential = DefaultAzureCredential()
-        service_client = DataLakeServiceClient(account_url, credential=token_credential)
-
-        return service_client
-
-    def process_tree(self, sc: DataLakeServiceClient):
-        pass
-
-
-class OrchestratorUpdate:
-    def __init__(self, root: RootNode):
-        self.root = root
-
-    def process_tree(self, sc: DataLakeServiceClient):
-        pass
+    def process_tree(self):
+        for node in bfs(self.root):
+            processor = processor_selector(node)
+            dc = processor.get_dir_client(node, self.sc)
+            processor.set_acls(node, dc)
 
 
 class ClientWithACLSupport(ABC):
@@ -51,6 +31,15 @@ class ClientWithACLSupport(ABC):
     # Not needed until update mode is implemented
     # @abstractmethod
     # def update_permissions_recursively(): ...
+
+
+def _get_service_client_token_credential(account_name: str) -> DataLakeServiceClient:
+    account_url = f"https://{account_name}.dfs.core.windows.net"
+    token_credential = DefaultAzureCredential()
+    # token_credential = AzureCliCredential()
+    service_client = DataLakeServiceClient(account_url, credential=token_credential)
+
+    return service_client
 
 
 def _get_acls_to_preserve(current_acls: str) -> Set[Acl]:
@@ -153,10 +142,3 @@ def processor_selector(node):
         return ProcessorRoot()
     elif isinstance(node, Node):
         return ProcessorDir()
-
-
-def orchestrator_factory(mode):
-    if mode == "authoritative":
-        return OrchestratorAuthoritative
-    elif mode == "update" or mode is None:
-        return OrchestratorUpdate

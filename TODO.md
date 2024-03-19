@@ -1,7 +1,6 @@
-- Cleanup the code in the app
 - Add YAML validation
 - Add options to CLI with Click:
     - options for input: file or YAML as string (does this make sense?)
     - options for authorization: if no option a deafult Azure authorization is assumed
 - Let input specify the acls for owner, owner group, mask, and other
-- Processe each container in a subprocess?? rate limit APIs???
+- Process each container in a subprocess?? rate limit APIs???
