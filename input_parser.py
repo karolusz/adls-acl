@@ -1,6 +1,7 @@
-import yaml
+import yamale
 from nodes import Node, RootNode, Acl
 from typing import Dict
+
 
 def _add_folder_nodes(parent_node: Node, folder: Dict):
     node = Node(folder["name"], parent=parent_node)
@@ -23,10 +24,21 @@ def process_acl_config(container_config) -> RootNode:
 
     return root_node
 
-def config_from_yaml(filename: str) -> Dict:
-    """ Reads a yaml file into a JSON config file"""
 
-    with open(filename, "r") as file:
-        acls_config = yaml.safe_load(file)
-    
-    return acls_config
+def config_from_yaml(filename: str) -> Dict:
+    """Reads a yaml file into dictionary and validates."""
+
+    config_schema = yamale.make_schema("./schema.yml", parser="PyYAML")
+    acls_config = yamale.make_data(filename, parser="PyYAML")
+
+    try:
+        yamale.validate(config_schema, acls_config)
+    except yamale.YamaleError as e:
+        for result in e.results:
+            print(f"Error validating data {result.data} with {result.schema}\n\t")
+            for error in result.errors:
+                print("\t%s" % error)
+        raise e
+
+    # yamale puts the dict from yaml into a tuple, into a list
+    return acls_config[0][0]

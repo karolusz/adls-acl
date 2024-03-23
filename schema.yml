@@ -1,0 +1,13 @@
+account: str()
+containers: list(include('folder'))
+---
+folder:
+  name: str()
+  acls: list(include('acl'))
+  folders: list(include('folder'), required=False)
+acl:
+  oid: str()
+  type: str(regex='user|group')
+  acl: str(regex='[rwx\\-]+', min=3, max=3)
+  scope: str(required=False)
+  recursive: bool(required=False)
