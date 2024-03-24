@@ -1,11 +1,12 @@
 import yamale
+import pkgutil
 from typing import Dict
 
 
 def config_from_yaml(filename: str) -> Dict:
     """Reads a yaml file into dictionary and validates."""
-
-    config_schema = yamale.make_schema("./schema.yml", parser="PyYAML")
+    schema = pkgutil.get_data(__name__, "schema.yml").decode("utf-8")
+    config_schema = yamale.make_schema(None, parser="PyYAML", content=schema)
     acls_config = yamale.make_data(filename, parser="PyYAML")
 
     try:

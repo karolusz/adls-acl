@@ -4,9 +4,10 @@ from azure.storage.filedatalake import (
 )
 from azure.identity import DefaultAzureCredential, AzureCliCredential
 from azure.core.exceptions import ResourceExistsError
-from nodes import RootNode, Node, bfs, Acl
 from abc import ABC, abstractmethod
 from typing import Set
+
+from .nodes import RootNode, Node, bfs, Acl
 
 
 class Orchestrator:

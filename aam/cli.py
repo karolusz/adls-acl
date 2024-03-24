@@ -14,9 +14,9 @@
 # How to handle recursive ACLs? Another pass at the end?
 #
 import argparse
-from orchestrator import Orchestrator
-from input_parser import config_from_yaml
-from nodes import container_config_to_tree
+from .orchestrator import Orchestrator
+from .input_parser import config_from_yaml
+from .nodes import container_config_to_tree
 
 
 def main():
