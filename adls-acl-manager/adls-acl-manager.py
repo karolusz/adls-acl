@@ -13,25 +13,13 @@
 # In "authoritative" mode the default acls will have to be pushed down from parent nodes to children.
 # How to handle recursive ACLs? Another pass at the end?
 #
-import logging, re, argparse
-from azure.storage.filedatalake import (
-    DataLakeServiceClient,
-    DataLakeDirectoryClient,
-    FileSystemClient,
-)
-from azure.core.exceptions import ResourceExistsError
-from azure.core._match_conditions import MatchConditions
-from azure.storage.filedatalake._models import ContentSettings
-from azure.identity import DefaultAzureCredential, AzureCliCredential
-from abc import ABC, abstractmethod
-from typing import List, Dict, Optional, Self
-from dataclasses import dataclass
+import argparse
 from orchestrator import Orchestrator
-from nodes import RootNode, Node, bfs, Acl
-from input_parser import process_acl_config, config_from_yaml
+from input_parser import config_from_yaml
+from nodes import container_config_to_tree
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(
         description="A small tool for managing data lake gen v2 ACLs"
     )
@@ -41,13 +29,11 @@ if __name__ == "__main__":
         "-m",
         "--mode",
         dest="mode",
-        choices=["update", "authoritative"],
-        default="update",
+        choices=["authoritative", "update"],
+        default="authoritative",
     )
     args = parser.parse_args()
 
-    # load_dotenv(".env")
-    
     acls_config = config_from_yaml(args.config_file)
 
     if args.mode == "update":
@@ -55,6 +41,9 @@ if __name__ == "__main__":
         raise ValueError
 
     for container in acls_config["containers"]:
-        tree_root = process_acl_config(container)
+        tree_root = container_config_to_tree(container)
         Orchestrator(tree_root, acls_config["account"]).process_tree()
 
+
+if __name__ == "__main__":
+    main()

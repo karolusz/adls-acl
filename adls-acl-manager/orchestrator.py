@@ -36,7 +36,6 @@ class ClientWithACLSupport(ABC):
 def _get_service_client_token_credential(account_name: str) -> DataLakeServiceClient:
     account_url = f"https://{account_name}.dfs.core.windows.net"
     token_credential = DefaultAzureCredential()
-    # token_credential = AzureCliCredential()
     service_client = DataLakeServiceClient(account_url, credential=token_credential)
 
     return service_client

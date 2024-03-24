@@ -131,6 +131,28 @@ class RootNode(Node):
         super().__init__(name, parent)
 
 
+def _add_folder_nodes(parent_node: Node, folder: Dict):
+    node = Node(folder["name"], parent=parent_node)
+    for acl in folder["acls"]:
+        node.add_acl(Acl.from_dict(acl))
+
+    if "folders" in folder:
+        for subfolder in folder["folders"]:
+            _add_folder_nodes(node, subfolder)
+
+
+def container_config_to_tree(container_config) -> RootNode:
+    """Returns a Tree from JSON configuration"""
+    root_node = RootNode(container_config["name"])
+    for acl in container_config["acls"]:
+        root_node.add_acl(Acl.from_dict(acl))
+
+    for folder in container_config["folders"]:
+        _add_folder_nodes(root_node, folder)
+
+    return root_node
+
+
 def bfs(root: RootNode):
     """Breadth-first traversal of the tree"""
     queue = [root]
