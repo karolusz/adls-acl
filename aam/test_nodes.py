@@ -119,9 +119,99 @@ class TestNode:
 
 class TestAcl:
     @pytest.fixture(scope="class")
-    def acl_str():
-        return None
+    def acl_str(self):
+        return "group:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:rwx"
 
     @pytest.fixture(scope="class")
-    def acl_dict():
-        return None
+    def acl_str_default(self):
+        return "default:group:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:rwx"
+
+    @pytest.fixture(scope="class")
+    def acl_str_owner(self):
+        return "user::rwx"
+
+    @pytest.fixture(scope="class")
+    def acl_str_owner_group(self):
+        return "group::rwx"
+
+    @pytest.fixture(scope="class")
+    def acl_str_mask(self):
+        return "mask::rwx"
+
+    @pytest.fixture(scope="class")
+    def acl_str_other(self):
+        return "other::rwx"
+
+    @pytest.fixture(scope="class")
+    def acl_dict(self):
+        return {
+            "type": "group",
+            "oid": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+            "acl": "rwx",
+        }
+
+    @pytest.fixture(scope="class")
+    def acl_dict_default(self):
+        return {
+            "scope": "default",
+            "type": "group",
+            "oid": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+            "acl": "rwx",
+        }
+
+    def test_from_str(self, acl_str):
+        acl = nodes.Acl.from_str(acl_str)
+
+        assert isinstance(acl, nodes.Acl)
+        assert acl.scope == None
+        assert acl.permissions == "rwx"
+        assert acl.p_type == "group"
+
+    def test_from_str_scope(self, acl_str_default):
+        acl = nodes.Acl.from_str(acl_str_default)
+
+        assert isinstance(acl, nodes.Acl)
+        assert acl.scope == "default"
+        assert acl.permissions == "rwx"
+        assert acl.p_type == "group"
+
+    def test_from_dict(self, acl_dict):
+        acl = nodes.Acl.from_dict(acl_dict)
+
+        assert isinstance(acl, nodes.Acl)
+        assert acl.scope == None
+        assert acl.permissions == "rwx"
+        assert acl.p_type == "group"
+
+    def test_from_dict_scope(self, acl_dict_default):
+        acl = nodes.Acl.from_dict(acl_dict_default)
+
+        assert isinstance(acl, nodes.Acl)
+        assert acl.scope == "default"
+        assert acl.permissions == "rwx"
+        assert acl.p_type == "group"
+
+    def test_is_defualt(self, acl_str_default):
+        acl = nodes.Acl.from_str(acl_str_default)
+
+        assert acl.is_default()
+
+    def test_is_owner(self, acl_str_owner):
+        acl = nodes.Acl.from_str(acl_str_owner)
+
+        assert acl.is_owner()
+
+    def test_is_owner_group(self, acl_str_owner_group):
+        acl = nodes.Acl.from_str(acl_str_owner_group)
+
+        assert acl.is_owner_group()
+
+    def test_is_mask(self, acl_str_mask):
+        acl = nodes.Acl.from_str(acl_str_mask)
+
+        assert acl.is_mask()
+
+    def test_is_other(self, acl_str_other):
+        acl = nodes.Acl.from_str(acl_str_other)
+
+        assert acl.is_other()
