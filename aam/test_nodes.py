@@ -1,5 +1,5 @@
 import pytest, copy
-from aam import nodes
+from . import nodes
 
 
 @pytest.fixture(scope="module")

@@ -42,16 +42,21 @@ def _get_service_client_token_credential(account_name: str) -> DataLakeServiceCl
     return service_client
 
 
-def _get_acls_to_preserve(current_acls: str) -> Set[Acl]:
+def _filter_acls_to_preserve(current_acls: Set[Acl]) -> Set[Acl]:
     """Determines which ACLs in the current Node should be preserved in the update"""
     acls_to_preserve = set()
 
-    for acl_str in current_acls.split(","):
-        acl = Acl.from_str(acl_str)
+    for acl in current_acls:
         if any([acl.is_mask(), acl.is_other(), acl.is_owner(), acl.is_owner_group()]):
             acls_to_preserve.update((acl,))
 
     return acls_to_preserve
+
+
+def _get_current_acls(client: DataLakeDirectoryClient) -> Set[Acl]:
+    """Returns a set of ACLs currently set on the directory."""
+    current_acls_str = client.get_access_control()["acl"]
+    return set([Acl.from_str(acl_str) for acl_str in current_acls_str.split(",")])
 
 
 def _set_acls(client: DataLakeDirectoryClient, acls: Set[Acl]) -> None:
@@ -73,8 +78,8 @@ class Processor(ABC):
     def set_acls(self, node: Node, client: DataLakeDirectoryClient):
         # Get current ACLs to preseve ACLs for
         # Owner, Owner Group, mask, and other (unless specified in input)
-        current_acls = client.get_access_control()["acl"]
-        acls_to_preserve = _get_acls_to_preserve(current_acls)
+        current_acls = _get_current_acls(client)
+        acls_to_preserve = _filter_acls_to_preserve(current_acls)
         acls_to_pushdown = set([acl for acl in node.acls if acl.is_default()])
 
         # Collect ACLs to set
@@ -96,6 +101,8 @@ class ProcessorRoot(Processor):
         pass
 
     def get_dir_client(self, node: RootNode, client: DataLakeServiceClient):
+        """Creates a container if it doesn't exist and returns a file clietn
+        to its root directory."""
         print("PROCESSING NODE ===========")
         print(node)
         if not isinstance(node, RootNode):
@@ -121,6 +128,8 @@ class ProcessorDir(Processor):
         pass
 
     def get_dir_client(self, node: Node, client: DataLakeServiceClient):
+        """Creates a directory, if it doesn't exist and returns a directory
+        client."""
         print("PROCESSING NODE ===========")
         print(node)
 
