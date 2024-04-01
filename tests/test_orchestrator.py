@@ -1,6 +1,6 @@
 import pytest
-from aam import orchestrator as o
-from aam.nodes import Acl, Node
+from adls_acl import orchestrator as o
+from adls_acl.nodes import Acl, Node
 import azure.storage.filedatalake
 import azure.identity
 from unittest.mock import call
