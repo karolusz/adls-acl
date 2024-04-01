@@ -25,20 +25,16 @@ def main():
     )
 
     parser.add_argument("config_file")
-    parser.add_argument(
-        "-m",
-        "--mode",
-        dest="mode",
-        choices=["authoritative", "update"],
-        default="authoritative",
-    )
+    # parser.add_argument(
+    #    "-m",
+    #    "--mode",
+    #    dest="mode",
+    #    choices=["authoritative", "update"],
+    #    default="authoritative",
+    # )
     args = parser.parse_args()
 
     acls_config = config_from_yaml(args.config_file)
-
-    if args.mode == "update":
-        print("NOT IMPLEMENTED")
-        raise ValueError
 
     for container in acls_config["containers"]:
         tree_root = container_config_to_tree(container)
