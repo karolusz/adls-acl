@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="adls_acl",
-    version="0.0.1",
+    version="0.0.0",
     url="https://github.com/karolusz/adls-acl",
     author="Karol Luszczek",
     author_email="karol.luszczek@reinsight.se",
@@ -18,6 +18,7 @@ setup(
     include_package_data=True,
     install_requires=["yamale", "azure-storage-file-datalake", "azure-identity"],
     python_requires=">=3.10",
+    extras_require={"dev": ["pytest", "pytest-cov", "pytest-mock", "bumpver"]},
     entry_points={
         "console_scripts": ["adls-acl=adls_acl.cli:main"],
     },
