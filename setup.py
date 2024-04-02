@@ -1,7 +1,6 @@
 from setuptools import setup, find_packages
 
-# readme = open("README.md", encoding="utf-8").read()
-# version = open("aam/VERSION", encoding="utf-8").read().strip()
+readme = open("README.md", encoding="utf-8").read()
 
 setup(
     name="adls_acl",
@@ -10,8 +9,8 @@ setup(
     author="Karol Luszczek",
     author_email="karol.luszczek@reinsight.se",
     description="A small tool for managing Azure DataLake Store (ADLS) Access Control Lists (ACLs).",
-    # long_description=readme,
-    # long_description_content_type="text/markdown",
+    long_description=readme,
+    long_description_content_type="text/markdown",
     license="MIT",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
