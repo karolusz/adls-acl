@@ -1,14 +1,14 @@
 [paths]
 source =
-   ../adls_acl
-   */site-packages/adls_acl
+   src
+   */site-packages
 
 [run]
 branch = true
 parallel = true
 source =
     adls_acl
-    .
+    tests
 
 [report]
 show_missing = true
