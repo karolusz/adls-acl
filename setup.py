@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="adls_acl",
-    version="0.0.1b3",
+    version="0.0.1b4",
     url="https://github.com/karolusz/adls-acl",
     author="Karol Luszczek",
     author_email="karol.luszczek@reinsight.se",
