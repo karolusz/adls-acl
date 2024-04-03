@@ -15,11 +15,16 @@ setup(
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     include_package_data=True,
-    install_requires=["yamale", "azure-storage-file-datalake", "azure-identity"],
+    install_requires=[
+        "yamale",
+        "azure-storage-file-datalake",
+        "azure-identity",
+        "click",
+    ],
     python_requires=">=3.12",
     extras_require={"dev": ["pytest", "pytest-cov", "pytest-mock", "bumpver"]},
     entry_points={
-        "console_scripts": ["adls-acl=adls_acl.cli:main"],
+        "console_scripts": ["adls-acl=adls_acl.cli:cli"],
     },
     classifiers=[
         "Intended Audience :: Developers",
