@@ -6,7 +6,7 @@ A small CLI tool for managing Azure DataLake Storage (ADLS) [Access Control List
 It allows you to take control of your ADLS account's directory structure and ACLs as Infrastructure as Code through the use of YAML configuration files.
 
 [![Tests](https://github.com/karolusz/adls-acl/actions/workflows/tests.yml/badge.svg)](https://github.com/karolusz/adls-acl/actions/workflows/tests.yml)
-
+[![PyPI](https://img.shields.io/pypi/v/Adls-acl.svg)](https://pypi.org/project/adls-acl/)
 
 Requirements
 ------------
