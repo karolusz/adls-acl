@@ -1,9 +1,0 @@
-- Add options to CLI with Click:
-    - options for input: file or YAML as string (does this make sense?)
-    - options for authorization: if no option a deafult Azure authorization is assumed
-- Let input specify the acls for owner, owner group, mask, and other
-- Process each container in a subprocess?? rate limit APIs???src
-
-- Add pypi publish workflow
-- Add docs
-- add logging with options
