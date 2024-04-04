@@ -83,7 +83,7 @@ class Node:
         s = f"Path to node: {self.path}"
         s += f"\nAcls from input:"
         for acl in self.acls:
-            s += f"\n{str(acl)}"
+            s += f"\n\t{str(acl)}"
 
         return s
 

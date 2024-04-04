@@ -1,3 +1,4 @@
+import logging
 from azure.storage.filedatalake import (
     DataLakeServiceClient,
     DataLakeDirectoryClient,
@@ -8,6 +9,8 @@ from abc import ABC, abstractmethod
 from typing import Set
 
 from .nodes import RootNode, Node, bfs, Acl
+
+log = logging.getLogger(__name__)
 
 
 class Orchestrator:
@@ -61,9 +64,9 @@ def _get_current_acls(client: DataLakeDirectoryClient) -> Set[Acl]:
 
 def _set_acls(client: DataLakeDirectoryClient, acls: Set[Acl]) -> None:
     """Set ACLs from the set on the node"""
-    print("new acls")
+    log.info("Setting new acls:")
     for acl in acls:
-        print(acl)
+        log.info(f"\t{str(acl)}")
         client.set_access_control(acl=acl)
 
 
@@ -103,8 +106,8 @@ class ProcessorRoot(Processor):
     def get_dir_client(self, node: RootNode, client: DataLakeServiceClient):
         """Creates a container if it doesn't exist and returns a file clietn
         to its root directory."""
-        print("PROCESSING NODE ===========")
-        print(node)
+        log.info("PROCESSING NODE ===========")
+        log.info(node)
         if not isinstance(node, RootNode):
             raise TypeError(f"Node of type RootNode was expected")
 
@@ -130,8 +133,8 @@ class ProcessorDir(Processor):
     def get_dir_client(self, node: Node, client: DataLakeServiceClient):
         """Creates a directory, if it doesn't exist and returns a directory
         client."""
-        print("PROCESSING NODE ===========")
-        print(node)
+        log.info("PROCESSING NODE ===========")
+        log.info(node)
 
         folder_client = client.get_file_system_client(file_system=node.get_root().name)
         dir_client = folder_client.get_directory_client(node.path)

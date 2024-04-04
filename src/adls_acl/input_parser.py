@@ -1,6 +1,9 @@
 import yamale
 import pkgutil
+import logging
 from typing import Dict
+
+log = logging.getLogger(__name__)
 
 
 def config_from_yaml(config_str: str) -> Dict:
@@ -13,9 +16,7 @@ def config_from_yaml(config_str: str) -> Dict:
         yamale.validate(config_schema, acls_config)
     except yamale.YamaleError as e:
         for result in e.results:
-            print(f"Error validating data {result.data} with {result.schema}\n\t")
-            for error in result.errors:
-                print("\t%s" % error)
+            log.error(result)
         raise e
 
     # yamale puts the dict from yaml into a tuple, into a list
