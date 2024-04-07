@@ -8,6 +8,7 @@
 #
 import click, logging, sys
 from enum import Enum
+from .logger import configure_logger
 from .orchestrator import Orchestrator
 from .input_parser import config_from_yaml
 from .nodes import container_config_to_tree
@@ -15,47 +16,12 @@ from .nodes import container_config_to_tree
 root_logger = logging.getLogger()  # Root Logger
 
 
-class EnumCallableMixin:
-    """Makes enum callable."""
-
-    def __call__(self, *args, **kwargs):
-        return self.value(*args, **kwargs)
-
-
-class HandlerEnum(EnumCallableMixin, Enum):
-    stream = logging.StreamHandler
-    file = logging.FileHandler
-
-
-class FormatterStyleEnum(Enum):
-    simple = "%(message)s"
-    debug = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-
-
 @click.group()
 @click.option("--debug", is_flag=True, help="Enable debug messages.")
 @click.option("--silent", is_flag=True, help="Suppress logs to stdout.")
 @click.option("--log-file", "log_file", default=None, help="Redirect logs to a file.")
 def cli(debug, silent, log_file):
-    if debug:
-        root_logger.setLevel(logging.NOTSET)
-        format = logging.Formatter(FormatterStyleEnum.debug.value)
-    else:
-        root_logger.setLevel(logging.INFO)
-        format = logging.Formatter(FormatterStyleEnum.simple.value)
-
-    if not silent:
-        handler = HandlerEnum.stream(sys.stdout)
-        handler.setFormatter(format)
-        if not debug:
-            handler.addFilter(lambda record: "azure" not in record.name)
-        root_logger.addHandler(handler)
-    if log_file:
-        handler = HandlerEnum.file(filename=log_file, mode="w", encoding="utf-8")
-        handler.setFormatter(format)
-        if not debug:
-            handler.addFilter(lambda record: "azure" not in record.name)
-        root_logger.addHandler(handler)
+    configure_logger(root_logger, debug, silent, log_file)
 
 
 @cli.command()
