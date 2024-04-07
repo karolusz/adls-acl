@@ -35,12 +35,31 @@ The Azure Identity client (Python SDK) is used for authenticating to Microsoft E
 Usage:
 
 ```
-usage: adls-acl [PATH]
+Usage: adls-acl [OPTIONS] COMMAND [ARGS]...
 
-Manage directories and ACLs in the Azure storage account.
+Options:
+  --debug          Enable debug messages.
+  --silent         Suppress logs to stdout.
+  --log-file TEXT  Redirect logs to a file.
+  --help           Show this message and exit.
 
-positional arguments:
-  PATH                  path to the input file with the desired directory structure and ACLs.
+Commands:
+  set-acl  Read and set direcotry structure and ACLs from a YAML file.
+```
+
+#### `set-acl` command
+```
+Usage: adls-acl set-acl [OPTIONS] FILE
+
+  Read and set direcotry structure and ACLs from a YAML file.
+
+Options:
+  --help  Show this message and exit.
+```
+
+To set acls from an input file `test.yml` the shell command would look like:
+```bash
+adls-acl set-acl test.yml
 ```
 ### Input file
 

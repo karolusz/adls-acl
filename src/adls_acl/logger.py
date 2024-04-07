@@ -52,3 +52,5 @@ def configure_logger(
             handler.addFilter(filter)
 
         logger.addHandler(handler)
+
+    return logger
