@@ -33,11 +33,11 @@ class FormatterStyleEnum(Enum):
 
 
 @click.group()
-@click.option("--debug", default=False, help="Enable debug messages.")
-@click.option("--silent", "silent", default=False, help="Suppress logs to stdout.")
+@click.option("--debug", is_flag=True, help="Enable debug messages.")
+@click.option("--silent", is_flag=True, help="Suppress logs to stdout.")
 @click.option("--log-file", "log_file", default=None, help="Redirect logs to a file.")
 def cli(debug, silent, log_file):
-    if debug == True:
+    if debug:
         root_logger.setLevel(logging.NOTSET)
         format = logging.Formatter(FormatterStyleEnum.debug.value)
     else:
