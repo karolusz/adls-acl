@@ -81,6 +81,7 @@ class Node:
     def __str__(self):
         """Print node nicely"""
         s = f"Path to node: {self.path}"
+
         s += f"\nAcls from input:"
         for acl in self.acls:
             s += f"\n\t{str(acl)}"
@@ -88,12 +89,24 @@ class Node:
         return s
 
     @property
-    def path(self):
+    def path_in_file_system(self):
         """Get the path from root of the container to the Node"""
-        if self.parent is not None and not isinstance(self.parent, RootNode):
+        if self.parent is not None and self.parent.parent is not None:
+            return f"{self.parent.path_in_file_system}/{self.name}"
+        else:
+            return f"{self.name}"
+
+    @property
+    def path(self):
+        """Get the path from including the root name"""
+        if self.parent is not None:
             return f"{self.parent.path}/{self.name}"
         else:
             return f"{self.name}"
+
+    @property
+    def is_root(self):
+        return True if self.parent == None else False
 
     @property
     def parent(self):
@@ -126,11 +139,6 @@ class Node:
         self.children.append(child)
 
 
-class RootNode(Node):
-    def __init__(self, name: str, parent=None):
-        super().__init__(name, parent)
-
-
 def _add_folder_nodes(parent_node: Node, folder: Dict):
     node = Node(folder["name"], parent=parent_node)
     for acl in folder["acls"]:
@@ -138,22 +146,17 @@ def _add_folder_nodes(parent_node: Node, folder: Dict):
 
     if "folders" in folder:
         for subfolder in folder["folders"]:
-            _add_folder_nodes(node, subfolder)
+            _ = _add_folder_nodes(node, subfolder)
+
+    return node  # The root node will be returend to the original caller
 
 
-def container_config_to_tree(container_config) -> RootNode:
+def container_config_to_tree(container_config) -> Node:
     """Returns a Tree from JSON configuration"""
-    root_node = RootNode(container_config["name"])
-    for acl in container_config["acls"]:
-        root_node.add_acl(Acl.from_dict(acl))
-
-    for folder in container_config["folders"]:
-        _add_folder_nodes(root_node, folder)
-
-    return root_node
+    return _add_folder_nodes(None, container_config)
 
 
-def bfs(root: RootNode):
+def bfs(root: Node):
     """Breadth-first traversal of the tree"""
     queue = [root]
 

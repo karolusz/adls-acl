@@ -8,13 +8,13 @@ from azure.core.exceptions import ResourceExistsError
 from abc import ABC, abstractmethod
 from typing import Set
 
-from .nodes import RootNode, Node, bfs, Acl
+from .nodes import Node, bfs, Acl
 
 log = logging.getLogger(__name__)
 
 
 class Orchestrator:
-    def __init__(self, root: RootNode, account_name: str):
+    def __init__(self, root: Node, account_name: str):
         self.root = root
         self.sc = _get_service_client_token_credential(account_name)
 
@@ -103,13 +103,13 @@ class ProcessorRoot(Processor):
     def __init__(self):
         pass
 
-    def get_dir_client(self, node: RootNode, client: DataLakeServiceClient):
+    def get_dir_client(self, node: Node, client: DataLakeServiceClient):
         """Creates a container if it doesn't exist and returns a file clietn
         to its root directory."""
         log.info("PROCESSING NODE ===========")
         log.info(node)
-        if not isinstance(node, RootNode):
-            raise TypeError(f"Node of type RootNode was expected")
+        if node.is_root == False:
+            raise ValueError(f"Node is not the root!")
 
         try:
             file_client = client.create_file_system(node.name)
@@ -137,7 +137,7 @@ class ProcessorDir(Processor):
         log.info(node)
 
         folder_client = client.get_file_system_client(file_system=node.get_root().name)
-        dir_client = folder_client.get_directory_client(node.path)
+        dir_client = folder_client.get_directory_client(node.path_in_file_system)
         dir_client.create_directory()
 
         return dir_client
@@ -150,7 +150,7 @@ class ProcessorDir(Processor):
 
 
 def processor_selector(node):
-    if isinstance(node, RootNode):
+    if node.is_root:
         return ProcessorRoot()
-    elif isinstance(node, Node):
+    else:
         return ProcessorDir()

@@ -57,7 +57,6 @@ def _counter(iter):
 def test_container_config_to_tree(container_dict):
     root = _dict_to_tree(container_dict)
 
-    assert isinstance(root, nodes.RootNode)
     assert len(root.children) == 1
     assert root.name == "test_container"
     assert all([isinstance(x, nodes.Acl) for x in root.children[0].acls])
@@ -87,9 +86,14 @@ class TestNode:
     def test_path_on_root_node(self, rootnode):
         assert rootnode.path == "test_container"
 
+    def test_path_in_fs_on_root_node(self, rootnode):
+        assert rootnode.path_in_file_system == "test_container"
+
     def test_path_on_leaf_node(self, leafnode):
-        print(leafnode.path)
-        assert leafnode.path == "test_folder/test_subfolder_one"
+        assert leafnode.path == "test_container/test_folder/test_subfolder_one"
+
+    def test_path_in_fs_on_leaf_node(self, leafnode):
+        assert leafnode.path_in_file_system == "test_folder/test_subfolder_one"
 
     def test_get_root(self, rootnode, leafnode):
         assert leafnode.get_root() == rootnode
