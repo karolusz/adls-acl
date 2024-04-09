@@ -94,7 +94,7 @@ class Node:
         if self.parent is not None and self.parent.parent is not None:
             return f"{self.parent.path_in_file_system}/{self.name}"
         else:
-            return f"{self.name}"
+            return self.name
 
     @property
     def path(self):
@@ -149,6 +149,27 @@ def _add_folder_nodes(parent_node: Node, folder: Dict):
             _ = _add_folder_nodes(node, subfolder)
 
     return node  # The root node will be returend to the original caller
+
+
+def find_node_by_name(root_node, full_name: str) -> Node:
+    """Return the node by its name (path in the filesystem: from container node)"""
+    """ Should i just have a Tree class instead with index by name for nodes?"""
+    # Names are path from contianer root: dir1/dir2/dir3
+
+    path_arr = full_name.split("/")
+    current_dir = path_arr[0]
+    path_reminder = ("/").join(path_arr[1:])
+    node = None
+
+    for child_node in root_node.children:
+        if child_node.name == current_dir:
+            node = child_node
+            break
+
+    if len(path_reminder) > 0 and node is not None:
+        node = find_node_by_name(node, name=path_reminder)
+
+    return node
 
 
 def container_config_to_tree(container_config) -> Node:

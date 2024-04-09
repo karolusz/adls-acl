@@ -112,11 +112,11 @@ class ProcessorRoot(Processor):
             raise ValueError(f"Node is not the root!")
 
         try:
-            file_client = client.create_file_system(node.name)
+            fs_client = client.create_file_system(node.name)
         except ResourceExistsError:
-            file_client = client.get_file_system_client(file_system=node.name)
+            fs_client = client.get_file_system_client(file_system=node.name)
 
-        return file_client._get_root_directory_client()
+        return fs_client._get_root_directory_client()
 
     def set_acls(self, node: Node, client: DataLakeDirectoryClient):
         super().set_acls(node, client)

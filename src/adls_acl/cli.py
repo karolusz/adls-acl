@@ -11,7 +11,7 @@ from enum import Enum
 from .logger import configure_logger
 from .orchestrator import Orchestrator
 from .input_parser import config_from_yaml
-from .nodes import container_config_to_tree
+from .nodes import container_config_to_tree, find_node_by_name
 
 root_logger = logging.getLogger()  # Root Logger
 
@@ -35,6 +35,30 @@ def set_acl(file):
     for container in acls_config["containers"]:
         tree_root = container_config_to_tree(container)
         Orchestrator(tree_root, acls_config["account"]).process_tree()
+
+
+@cli.command()
+@click.argument("account_name", type=str)
+def get_acl(account_name):
+    """Read the current fs and acls on dirs."""
+    sc = Orchestrator(None, account_name).sc
+    for container in sc.list_file_systems():
+        # print(type(container), container)
+        fc = sc.get_file_system_client(container)
+        dc = fc._get_root_directory_client()
+        acl = dc.get_access_control()
+        # print(acl)
+        # print(acl["acl"])
+
+        path_list = fc.get_paths(recursive=True)
+        for path in path_list:
+            dc = fc.get_directory_client(path.name)
+            print(path.name)
+
+            # extract info to create Node
+            # add node as root child if name is only one component
+            # search for node's parent otherwise
+            #
 
 
 if __name__ == "__main__":
