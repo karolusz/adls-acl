@@ -62,10 +62,34 @@ def test_container_config_to_tree(container_dict):
     assert all([isinstance(x, nodes.Acl) for x in root.children[0].acls])
 
 
-def test_bfs(container_dict):
-    root = _dict_to_tree(container_dict)
-    count = _counter(nodes.bfs(root))
-    assert count == 3
+class TestTraversal:
+    @pytest.fixture(scope="class")
+    def tree(self):
+        root = nodes.Node("root")
+        sub_node1 = nodes.Node("subn1", root)
+        sub_node2 = nodes.Node("subn2", root)
+        _ = nodes.Node("subn3", sub_node1)
+        _ = nodes.Node("subn4", sub_node2)
+
+        return root
+
+    def test_bfs(self, tree):
+        assert [x.name for x in nodes.bfs(tree)] == [
+            "root",
+            "subn1",
+            "subn2",
+            "subn3",
+            "subn4",
+        ]
+
+    def test_dfs(self, tree):
+        assert [x.name for x in nodes.dfs(tree)] == [
+            "root",
+            "subn2",
+            "subn4",
+            "subn1",
+            "subn3",
+        ]
 
 
 class TestNode:
