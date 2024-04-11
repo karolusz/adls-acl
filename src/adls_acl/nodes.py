@@ -157,6 +157,11 @@ def find_node_by_name(root_node, full_name: str) -> Node:
     # Names are path from contianer root: dir1/dir2/dir3
 
     path_arr = full_name.split("/")
+    # if the name of the node is only 1-level and the search is on the root level
+    # return root node immediatley
+    if path_arr[0] == "" and root_node.is_root:
+        return root_node
+
     current_dir = path_arr[0]
     path_reminder = ("/").join(path_arr[1:])
     node = None
@@ -167,7 +172,7 @@ def find_node_by_name(root_node, full_name: str) -> Node:
             break
 
     if len(path_reminder) > 0 and node is not None:
-        node = find_node_by_name(node, name=path_reminder)
+        node = find_node_by_name(node, full_name=path_reminder)
 
     return node
 
@@ -182,7 +187,18 @@ def bfs(root: Node):
     queue = [root]
 
     while queue:
-        node = queue.pop()
+        node = queue.pop(0)
         for child_node in node.children:
             queue.append(child_node)
+        yield node
+
+
+def dfs(root: Node):
+    """Depth-frist traversal of the tree"""
+    stack = [root]
+
+    while stack:
+        node = stack.pop()
+        for child_node in node.children:
+            stack.append(child_node)
         yield node
