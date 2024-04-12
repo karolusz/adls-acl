@@ -6,9 +6,9 @@ from azure.storage.filedatalake import (
 from azure.identity import DefaultAzureCredential, AzureCliCredential
 from azure.core.exceptions import ResourceExistsError
 from abc import ABC, abstractmethod
-from typing import Set
+from typing import Set, Dict
 
-from .nodes import Node, bfs, Acl
+from .nodes import Node, bfs, Acl, find_node_by_name
 
 log = logging.getLogger(__name__)
 
@@ -17,12 +17,48 @@ class Orchestrator:
     def __init__(self, root: Node, account_name: str):
         self.root = root
         self.sc = _get_service_client_token_credential(account_name)
+        self.account_name = account_name
 
     def process_tree(self):
         for node in bfs(self.root):
             processor = processor_selector(node)
             dc = processor.get_dir_client(node, self.sc)
             processor.set_acls(node, dc)
+
+    def read_account(self, omit_special: bool = False) -> Dict:
+        data = {}
+        data["account"] = self.account_name
+        data["containers"] = []
+        for container in self.sc.list_file_systems():
+            fc = self.sc.get_file_system_client(container)
+            dc = fc._get_root_directory_client()
+
+            root_node = Node(name=fc.file_system_name)
+
+            for acl in dc.get_access_control()["acl"].split(","):
+                acl = Acl.from_str(acl)
+                if omit_special and acl.is_special():
+                    pass
+                else:
+                    root_node.add_acl(acl)
+
+            path_list = fc.get_paths(recursive=True)
+            for path in filter(lambda x: x.is_directory == True, path_list):
+                dc = fc.get_directory_client(path.name)
+                parent_name = ("/").join(path.name.split("/")[:-1])
+                parent_node = find_node_by_name(root_node, parent_name)
+                node_name = path.name.split("/")[-1]
+                node = Node(name=node_name, parent=parent_node)
+                for acl in dc.get_access_control()["acl"].split(","):
+                    acl = Acl.from_str(acl)
+                    if omit_special and acl.is_special():
+                        pass
+                    else:
+                        node.add_acl(acl)
+
+            data["containers"].append(root_node.to_yaml())
+
+            return data
 
 
 class ClientWithACLSupport(ABC):
