@@ -70,6 +70,18 @@ class Acl:
         """Check if ACL is default"""
         return True if (self.scope == "default") else False
 
+    def to_yaml(self):
+        """Returns a dict reprentaion"""
+        data = {
+            "oid": self.oid,
+            "type": self.p_type,
+            "acl": self.permissions,
+        }
+        if self.scope is not None:
+            data["scope"] = self.scope
+
+        return data
+
 
 class Node:
     def __init__(self, name: str, parent=None):
@@ -98,7 +110,7 @@ class Node:
 
     @property
     def path(self):
-        """Get the path from including the root name"""
+        """Get the path from root (including the root name)"""
         if self.parent is not None:
             return f"{self.parent.path}/{self.name}"
         else:
@@ -137,6 +149,14 @@ class Node:
 
     def add_child(self, child: Acl):
         self.children.append(child)
+
+    def to_yaml(self):
+        """Returns a dict reprentaion"""
+        data = {"name": self.name, "acls": [acl.to_yaml() for acl in self.acls]}
+        if len(self.children) > 0:
+            data["folders"] = [child.to_yaml() for child in self.children]
+
+        return data
 
 
 def _add_folder_nodes(parent_node: Node, folder: Dict):

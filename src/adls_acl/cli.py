@@ -6,7 +6,7 @@
 # https://learn.microsoft.com/en-us/azure/storage/blobs/data-lake-storage-access-control#permissions-inheritance
 # default permissions have been set on the parent items before the child items have been created.
 #
-import click, logging, sys
+import click, logging, sys, yaml
 from enum import Enum
 from .logger import configure_logger
 from .orchestrator import Orchestrator
@@ -62,8 +62,10 @@ def get_acl(account_name):
             for acl in dc.get_access_control()["acl"].split(","):
                 node.add_acl(Acl.from_str(acl))
 
-        for node in dfs(root=root_node):
-            print(node)
+        # for node in dfs(root=root_node):
+        #    print(node)
+
+        print(yaml.dump(root_node.to_yaml(), sort_keys=False))
 
 
 if __name__ == "__main__":
