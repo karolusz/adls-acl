@@ -26,7 +26,10 @@ def cli(debug, silent, log_file):
 
 
 @cli.command()
-@click.argument("file", type=click.File(mode="r", encoding="utf-8", lazy=True))
+@click.argument(
+    "file",
+    type=click.File(mode="r", encoding="utf-8", lazy=True),
+)
 def set_acl(file):
     """Read and set direcotry structure and ACLs from a YAML file."""
     config_str = file.read()
@@ -39,9 +42,25 @@ def set_acl(file):
 
 @cli.command()
 @click.argument("account_name", type=str)
-def get_acl(account_name):
+@click.option(
+    "--dump-file",
+    "outfile",
+    type=click.File("w", encoding="utf-8", lazy=True),
+    help="A file to which the accounts' data will be writen to.",
+)
+@click.option(
+    "--omit-special",
+    "omit",
+    is_flag=True,
+    help="Omit special ACLs when reading the account.",
+)
+def get_acl(account_name, outfile, omit):
     """Read the current fs and acls on dirs."""
+    # Orchestrator(None, account_name).read_account()
     sc = Orchestrator(None, account_name).sc
+    data = {}
+    data["account"] = account_name
+    data["containers"] = []
     for container in sc.list_file_systems():
         fc = sc.get_file_system_client(container)
         dc = fc._get_root_directory_client()
@@ -49,7 +68,11 @@ def get_acl(account_name):
         root_node = Node(name=fc.file_system_name)
 
         for acl in dc.get_access_control()["acl"].split(","):
-            root_node.add_acl(Acl.from_str(acl))
+            acl = Acl.from_str(acl)
+            if omit and acl.is_special():
+                pass
+            else:
+                root_node.add_acl(acl)
 
         path_list = fc.get_paths(recursive=True)
         for path in filter(lambda x: x.is_directory == True, path_list):
@@ -58,14 +81,18 @@ def get_acl(account_name):
             parent_node = find_node_by_name(root_node, parent_name)
             node_name = path.name.split("/")[-1]
             node = Node(name=node_name, parent=parent_node)
-
             for acl in dc.get_access_control()["acl"].split(","):
-                node.add_acl(Acl.from_str(acl))
+                acl = Acl.from_str(acl)
+                if omit and acl.is_special():
+                    pass
+                else:
+                    node.add_acl(acl)
 
         # for node in dfs(root=root_node):
         #    print(node)
 
-        print(yaml.dump(root_node.to_yaml(), sort_keys=False))
+        data["containers"].append(root_node.to_yaml())
+    yaml.dump(data, outfile, sort_keys=False, indent=2)
 
 
 if __name__ == "__main__":

@@ -228,18 +228,22 @@ class TestAcl:
         acl = nodes.Acl.from_str(acl_str_owner)
 
         assert acl.is_owner()
+        assert acl.is_special()
 
     def test_is_owner_group(self, acl_str_owner_group):
         acl = nodes.Acl.from_str(acl_str_owner_group)
 
         assert acl.is_owner_group()
+        assert acl.is_special()
 
     def test_is_mask(self, acl_str_mask):
         acl = nodes.Acl.from_str(acl_str_mask)
 
         assert acl.is_mask()
+        assert acl.is_special()
 
     def test_is_other(self, acl_str_other):
         acl = nodes.Acl.from_str(acl_str_other)
 
         assert acl.is_other()
+        assert acl.is_special()

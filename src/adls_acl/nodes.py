@@ -70,6 +70,21 @@ class Acl:
         """Check if ACL is default"""
         return True if (self.scope == "default") else False
 
+    def is_special(self):
+        """check if any of: mask, other, owner, owner_group"""
+        return (
+            True
+            if any(
+                [
+                    self.is_owner(),
+                    self.is_owner_group(),
+                    self.is_mask(),
+                    self.is_other(),
+                ]
+            )
+            else False
+        )
+
     def to_yaml(self):
         """Returns a dict reprentaion"""
         data = {
