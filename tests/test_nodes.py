@@ -57,16 +57,39 @@ def _counter(iter):
 def test_container_config_to_tree(container_dict):
     root = _dict_to_tree(container_dict)
 
-    assert isinstance(root, nodes.RootNode)
     assert len(root.children) == 1
     assert root.name == "test_container"
     assert all([isinstance(x, nodes.Acl) for x in root.children[0].acls])
 
 
-def test_bfs(container_dict):
-    root = _dict_to_tree(container_dict)
-    count = _counter(nodes.bfs(root))
-    assert count == 3
+class TestTraversal:
+    @pytest.fixture(scope="class")
+    def tree(self):
+        root = nodes.Node("root")
+        sub_node1 = nodes.Node("subn1", root)
+        sub_node2 = nodes.Node("subn2", root)
+        _ = nodes.Node("subn3", sub_node1)
+        _ = nodes.Node("subn4", sub_node2)
+
+        return root
+
+    def test_bfs(self, tree):
+        assert [x.name for x in nodes.bfs(tree)] == [
+            "root",
+            "subn1",
+            "subn2",
+            "subn3",
+            "subn4",
+        ]
+
+    def test_dfs(self, tree):
+        assert [x.name for x in nodes.dfs(tree)] == [
+            "root",
+            "subn2",
+            "subn4",
+            "subn1",
+            "subn3",
+        ]
 
 
 class TestNode:
@@ -87,9 +110,14 @@ class TestNode:
     def test_path_on_root_node(self, rootnode):
         assert rootnode.path == "test_container"
 
+    def test_path_in_fs_on_root_node(self, rootnode):
+        assert rootnode.path_in_file_system == "test_container"
+
     def test_path_on_leaf_node(self, leafnode):
-        print(leafnode.path)
-        assert leafnode.path == "test_folder/test_subfolder_one"
+        assert leafnode.path == "test_container/test_folder/test_subfolder_one"
+
+    def test_path_in_fs_on_leaf_node(self, leafnode):
+        assert leafnode.path_in_file_system == "test_folder/test_subfolder_one"
 
     def test_get_root(self, rootnode, leafnode):
         assert leafnode.get_root() == rootnode
@@ -200,18 +228,22 @@ class TestAcl:
         acl = nodes.Acl.from_str(acl_str_owner)
 
         assert acl.is_owner()
+        assert acl.is_special()
 
     def test_is_owner_group(self, acl_str_owner_group):
         acl = nodes.Acl.from_str(acl_str_owner_group)
 
         assert acl.is_owner_group()
+        assert acl.is_special()
 
     def test_is_mask(self, acl_str_mask):
         acl = nodes.Acl.from_str(acl_str_mask)
 
         assert acl.is_mask()
+        assert acl.is_special()
 
     def test_is_other(self, acl_str_other):
         acl = nodes.Acl.from_str(acl_str_other)
 
         assert acl.is_other()
+        assert acl.is_special()

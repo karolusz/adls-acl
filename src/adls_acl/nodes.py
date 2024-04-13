@@ -70,6 +70,33 @@ class Acl:
         """Check if ACL is default"""
         return True if (self.scope == "default") else False
 
+    def is_special(self):
+        """check if any of: mask, other, owner, owner_group"""
+        return (
+            True
+            if any(
+                [
+                    self.is_owner(),
+                    self.is_owner_group(),
+                    self.is_mask(),
+                    self.is_other(),
+                ]
+            )
+            else False
+        )
+
+    def to_yaml(self):
+        """Returns a dict reprentaion"""
+        data = {
+            "oid": self.oid,
+            "type": self.p_type,
+            "acl": self.permissions,
+        }
+        if self.scope is not None:
+            data["scope"] = self.scope
+
+        return data
+
 
 class Node:
     def __init__(self, name: str, parent=None):
@@ -81,6 +108,7 @@ class Node:
     def __str__(self):
         """Print node nicely"""
         s = f"Path to node: {self.path}"
+
         s += f"\nAcls from input:"
         for acl in self.acls:
             s += f"\n\t{str(acl)}"
@@ -88,12 +116,24 @@ class Node:
         return s
 
     @property
-    def path(self):
+    def path_in_file_system(self):
         """Get the path from root of the container to the Node"""
-        if self.parent is not None and not isinstance(self.parent, RootNode):
+        if self.parent is not None and self.parent.parent is not None:
+            return f"{self.parent.path_in_file_system}/{self.name}"
+        else:
+            return self.name
+
+    @property
+    def path(self):
+        """Get the path from root (including the root name)"""
+        if self.parent is not None:
             return f"{self.parent.path}/{self.name}"
         else:
             return f"{self.name}"
+
+    @property
+    def is_root(self):
+        return True if self.parent == None else False
 
     @property
     def parent(self):
@@ -125,10 +165,13 @@ class Node:
     def add_child(self, child: Acl):
         self.children.append(child)
 
+    def to_yaml(self):
+        """Returns a dict reprentaion"""
+        data = {"name": self.name, "acls": [acl.to_yaml() for acl in self.acls]}
+        if len(self.children) > 0:
+            data["folders"] = [child.to_yaml() for child in self.children]
 
-class RootNode(Node):
-    def __init__(self, name: str, parent=None):
-        super().__init__(name, parent)
+        return data
 
 
 def _add_folder_nodes(parent_node: Node, folder: Dict):
@@ -138,27 +181,59 @@ def _add_folder_nodes(parent_node: Node, folder: Dict):
 
     if "folders" in folder:
         for subfolder in folder["folders"]:
-            _add_folder_nodes(node, subfolder)
+            _ = _add_folder_nodes(node, subfolder)
+
+    return node  # The root node will be returend to the original caller
 
 
-def container_config_to_tree(container_config) -> RootNode:
+def find_node_by_name(root_node, full_name: str) -> Node:
+    """Return the node by its name (path in the filesystem: from container node)"""
+    """ Should i just have a Tree class instead with index by name for nodes?"""
+    # Names are path from contianer root: dir1/dir2/dir3
+
+    path_arr = full_name.split("/")
+    # if the name of the node is only 1-level and the search is on the root level
+    # return root node immediatley
+    if path_arr[0] == "" and root_node.is_root:
+        return root_node
+
+    current_dir = path_arr[0]
+    path_reminder = ("/").join(path_arr[1:])
+    node = None
+
+    for child_node in root_node.children:
+        if child_node.name == current_dir:
+            node = child_node
+            break
+
+    if len(path_reminder) > 0 and node is not None:
+        node = find_node_by_name(node, full_name=path_reminder)
+
+    return node
+
+
+def container_config_to_tree(container_config) -> Node:
     """Returns a Tree from JSON configuration"""
-    root_node = RootNode(container_config["name"])
-    for acl in container_config["acls"]:
-        root_node.add_acl(Acl.from_dict(acl))
-
-    for folder in container_config["folders"]:
-        _add_folder_nodes(root_node, folder)
-
-    return root_node
+    return _add_folder_nodes(None, container_config)
 
 
-def bfs(root: RootNode):
+def bfs(root: Node):
     """Breadth-first traversal of the tree"""
     queue = [root]
 
     while queue:
-        node = queue.pop()
+        node = queue.pop(0)
         for child_node in node.children:
             queue.append(child_node)
+        yield node
+
+
+def dfs(root: Node):
+    """Depth-frist traversal of the tree"""
+    stack = [root]
+
+    while stack:
+        node = stack.pop()
+        for child_node in node.children:
+            stack.append(child_node)
         yield node

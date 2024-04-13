@@ -44,6 +44,7 @@ Options:
   --help           Show this message and exit.
 
 Commands:
+  get-acl  Read the current fs and acls on dirs.
   set-acl  Read and set direcotry structure and ACLs from a YAML file.
 ```
 
@@ -61,6 +62,26 @@ To set acls from an input file `test.yml` the shell command would look like:
 ```bash
 adls-acl set-acl test.yml
 ```
+
+#### `get-acl` command
+```
+Usage: adls-acl get-acl [OPTIONS] ACCOUNT_NAME OUTFILE
+
+  Read the current fs and acls on dirs.
+
+Options:
+  --omit-special        Omit special ACLs when reading the account.
+  --help                Show this message and exit.
+```
+
+This will print the current filesystem of an account (directories only, no files) and their ACLs to a file on a path pass as `OUTFILE` argument.
+[Special ACLs](#special-acls) can be omitted with a flag `--omit-special`
+
+To read ACLs of a ADLS storage account named `testaccount` to file `dump.yml`:
+```bash
+adls-acl get-acl testaccount dump.yml
+```
+
 ### Input file
 
 The YAML schema reference for the input files. Each input file represents a desired directory structure and ACLs for a single Azure Storage account. 
@@ -70,7 +91,7 @@ Example of an input file for a fictitious storage account. All elements of the s
 
 ```yaml
 account: testaccount
-containers: 
+containers:
   - name: testcontainer1 
     acls:
       - oid: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
