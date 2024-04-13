@@ -41,11 +41,9 @@ def set_acl(file):
 
 @cli.command()
 @click.argument("account_name", type=str)
-@click.option(
-    "--dump-file",
+@click.argument(
     "outfile",
     type=click.File("w", encoding="utf-8", lazy=True),
-    help="A file to which the accounts' data will be writen to.",
 )
 @click.option(
     "--omit-special",
