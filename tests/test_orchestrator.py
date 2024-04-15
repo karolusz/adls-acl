@@ -51,6 +51,11 @@ def test__get_current_acls(mock_client):
     assert len(current_acls) == 2
 
 
+def test__get_current_acl_no_special(mock_client):
+    curent_acls = o._get_current_acls(mock_client, True)
+    assert len(curent_acls) == 1
+
+
 def test__filter_acls_to_preserve(test_acl_set):
     acls_to_preserve = o._filter_acls_to_preserve(test_acl_set)
 

@@ -29,18 +29,14 @@ class Orchestrator:
         data["account"] = self.account_name
         data["containers"] = []
         for container in self.sc.list_file_systems():
+            # Create a root node
             fc = self.sc.get_file_system_client(container)
             dc = fc._get_root_directory_client()
-
             root_node = Node(name=fc.file_system_name)
+            for acl in _get_current_acls(dc, omit_special):
+                node.add_acl(acl)
 
-            for acl in dc.get_access_control()["acl"].split(","):
-                acl = Acl.from_str(acl)
-                if omit_special and acl.is_special():
-                    pass
-                else:
-                    root_node.add_acl(acl)
-
+            # Add nodes to the tree
             path_list = fc.get_paths(recursive=True)
             for path in filter(lambda x: x.is_directory == True, path_list):
                 dc = fc.get_directory_client(path.name)
@@ -48,12 +44,8 @@ class Orchestrator:
                 parent_node = find_node_by_name(root_node, parent_name)
                 node_name = path.name.split("/")[-1]
                 node = Node(name=node_name, parent=parent_node)
-                for acl in dc.get_access_control()["acl"].split(","):
-                    acl = Acl.from_str(acl)
-                    if omit_special and acl.is_special():
-                        pass
-                    else:
-                        node.add_acl(acl)
+                for acl in _get_current_acls(dc, omit_special):
+                    node.add_acl(acl)
 
             data["containers"].append(root_node.to_yaml())
 
@@ -91,10 +83,15 @@ def _filter_acls_to_preserve(current_acls: Set[Acl]) -> Set[Acl]:
     return acls_to_preserve
 
 
-def _get_current_acls(client: DataLakeDirectoryClient) -> Set[Acl]:
+def _get_current_acls(
+    client: DataLakeDirectoryClient, omit_special: bool = False
+) -> Set[Acl]:
     """Returns a set of ACLs currently set on the directory."""
     current_acls_str = client.get_access_control()["acl"]
-    return set([Acl.from_str(acl_str) for acl_str in current_acls_str.split(",")])
+    acls = set([Acl.from_str(acl_str) for acl_str in current_acls_str.split(",")])
+    if omit_special:
+        acls = set([acl for acl in acls if not acl.is_special()])
+    return acls
 
 
 def _set_acls(client: DataLakeDirectoryClient, acls: Set[Acl]) -> None:
