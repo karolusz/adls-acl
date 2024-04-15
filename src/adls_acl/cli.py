@@ -33,10 +33,11 @@ def set_acl(file):
     """Read and set direcotry structure and ACLs from a YAML file."""
     config_str = file.read()
     acls_config = config_from_yaml(config_str)
+    o = Orchestrator(acls_config["account"])
 
     for container in acls_config["containers"]:
         tree_root = container_config_to_tree(container)
-        Orchestrator(tree_root, acls_config["account"]).process_tree()
+        o.process_tree(tree_root)
 
 
 @cli.command()
@@ -53,7 +54,7 @@ def set_acl(file):
 )
 def get_acl(account_name, outfile, omit_special):
     """Read the current fs and acls on dirs."""
-    data = Orchestrator(None, account_name).read_account(omit_special=omit_special)
+    data = Orchestrator(account_name).read_account(omit_special=omit_special)
     yaml.dump(data, outfile, sort_keys=False, indent=2)
 
 

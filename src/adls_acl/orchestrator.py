@@ -14,13 +14,12 @@ log = logging.getLogger(__name__)
 
 
 class Orchestrator:
-    def __init__(self, root: Node, account_name: str):
-        self.root = root
+    def __init__(self, account_name: str):
         self.sc = _get_service_client_token_credential(account_name)
         self.account_name = account_name
 
-    def process_tree(self):
-        for node in bfs(self.root):
+    def process_tree(self, root):
+        for node in bfs(root):
             processor = processor_selector(node)
             dc = processor.get_dir_client(node, self.sc)
             processor.set_acls(node, dc)
