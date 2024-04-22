@@ -23,8 +23,7 @@ root_logger = logging.getLogger()  # Root Logger
 @click.option("--debug", is_flag=True, help="Enable debug messages.")
 @click.option("--silent", is_flag=True, help="Suppress logs to stdout.")
 @click.option("--log-file", "log_file", default=None, help="Redirect logs to a file.")
-def cli(debug, silent, log_file):
-    global root_logger
+def cli(debug, silent, log_file, root_logger=root_logger):
     root_logger = configure_logger(root_logger, debug, silent, log_file)
 
 
