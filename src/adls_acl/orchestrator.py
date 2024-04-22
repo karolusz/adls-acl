@@ -34,7 +34,7 @@ class Orchestrator:
             dc = fc._get_root_directory_client()
             root_node = Node(name=fc.file_system_name)
             for acl in _get_current_acls(dc, omit_special):
-                node.add_acl(acl)
+                root_node.add_acl(acl)
 
             # Add nodes to the tree
             path_list = fc.get_paths(recursive=True)
@@ -109,8 +109,9 @@ def _pushdown_acls(node: Node, acls: Set[Acl]) -> None:
 
 
 class Processor(ABC):
+    @staticmethod
     @abstractmethod
-    def set_acls(self, node: Node, client: DataLakeDirectoryClient):
+    def set_acls(node: Node, client: DataLakeDirectoryClient):
         # Get current ACLs to preseve ACLs for
         # Owner, Owner Group, mask, and other (unless specified in input)
         current_acls = _get_current_acls(client)
@@ -124,18 +125,19 @@ class Processor(ABC):
         _set_acls(client, new_acls)
         _pushdown_acls(node, acls_to_pushdown)
 
+    @staticmethod
     @abstractmethod
     def get_dir_client() -> ClientWithACLSupport: ...
 
+    @staticmethod
     @abstractmethod
     def update_acls(): ...
 
 
 class ProcessorRoot(Processor):
-    def __init__(self):
-        pass
 
-    def get_dir_client(self, node: Node, client: DataLakeServiceClient):
+    @staticmethod
+    def get_dir_client(node: Node, client: DataLakeServiceClient):
         """Creates a container if it doesn't exist and returns a file clietn
         to its root directory."""
         log.info("PROCESSING NODE ===========")
@@ -150,19 +152,20 @@ class ProcessorRoot(Processor):
 
         return fs_client._get_root_directory_client()
 
-    def set_acls(self, node: Node, client: DataLakeDirectoryClient):
-        super().set_acls(node, client)
+    @staticmethod
+    def set_acls(node: Node, client: DataLakeDirectoryClient):
+        super(ProcessorRoot, ProcessorRoot).set_acls(node, client)
         client.close()
 
+    @staticmethod
     def update_acls():
         pass
 
 
 class ProcessorDir(Processor):
-    def __init__(self):
-        pass
 
-    def get_dir_client(self, node: Node, client: DataLakeServiceClient):
+    @staticmethod
+    def get_dir_client(node: Node, client: DataLakeServiceClient):
         """Creates a directory, if it doesn't exist and returns a directory
         client."""
         log.info("PROCESSING NODE ===========")
@@ -174,9 +177,11 @@ class ProcessorDir(Processor):
 
         return dir_client
 
-    def set_acls(self, node: Node, client: DataLakeDirectoryClient):
-        super().set_acls(node, client)
+    @staticmethod
+    def set_acls(node: Node, client: DataLakeDirectoryClient):
+        super(ProcessorDir, ProcessorDir).set_acls(node, client)
 
+    @staticmethod
     def update_acls():
         pass
 

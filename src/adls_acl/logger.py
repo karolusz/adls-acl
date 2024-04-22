@@ -30,10 +30,10 @@ def configure_logger(
     filters = []
     if debug:
         logger.setLevel(logging.NOTSET)
-        format = logging.Formatter(FormatterStyleEnum.debug.value)
+        fromatter = logging.Formatter(FormatterStyleEnum.debug.value)
     else:
         logger.setLevel(logging.INFO)
-        format = logging.Formatter(FormatterStyleEnum.simple.value)
+        fromatter = logging.Formatter(FormatterStyleEnum.simple.value)
         filters.append(
             lambda record: "azure" not in record.name
         )  # Filters out logging from azure packages
@@ -47,7 +47,7 @@ def configure_logger(
 
     # Apply formatters, filters and register handlers
     for handler in handlers:
-        handler.setFormatter(format)
+        handler.setFormatter(fromatter)
         for filter in filters:
             handler.addFilter(filter)
 

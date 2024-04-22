@@ -174,7 +174,7 @@ class Node:
         return data
 
 
-def _add_folder_nodes(parent_node: Node, folder: Dict):
+def _add_folder_nodes(parent_node: Node | None, folder: Dict):
     node = Node(folder["name"], parent=parent_node)
     for acl in folder["acls"]:
         node.add_acl(Acl.from_dict(acl))
