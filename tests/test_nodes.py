@@ -1,4 +1,7 @@
-import pytest, copy
+import copy
+
+import pytest
+
 from adls_acl import nodes
 
 

@@ -1,9 +1,11 @@
+from unittest.mock import call
+
+import azure.identity
+import azure.storage.filedatalake
 import pytest
+
 from adls_acl import orchestrator as o
 from adls_acl.nodes import Acl, Node
-import azure.storage.filedatalake
-import azure.identity
-from unittest.mock import call
 
 
 def test_processor_selector():
