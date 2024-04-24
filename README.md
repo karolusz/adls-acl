@@ -249,12 +249,13 @@ Future releases will allow for more control over this behaviour (i.e, updating d
 The Azure Python SDK authentication is by default handled with [`DefaultAzureCredenial`](https://learn.microsoft.com/en-us/python/api/azure-identity/azure.identity.defaultazurecredential?view=azure-python).
 
 In addition, a user can target one of the supported Azure Python SDK, by using `--auth-method` option:
--[`EnvironmentCredential`](https://learn.microsoft.com/en-us/python/api/azure-identity/azure.identity.defaultazurecredential?view=azure-python)
--[`WorkloadIdentityCredential`](https://learn.microsoft.com/en-us/python/api/azure-identity/azure.identity.workloadidentitycredential?view=azure-python)
--[`ManagedIdentityCredential`](https://learn.microsoft.com/en-us/python/api/azure-identity/azure.identity.managedidentitycredential?view=azure-python)
--[`AzureCliCrendtial`](https://learn.microsoft.com/en-us/python/api/azure-identity/azure.identity.azureclicredential?view=azure-python)
--[`AzurePowerShellCrendeital`](https://learn.microsoft.com/en-us/python/api/azure-identity/azure.identity.azurepowershellcredential?view=azure-python)
--[`AzureDevleoperCliCredential`](https://learn.microsoft.com/en-us/python/api/azure-identity/azure.identity.azurepowershellcredential?view=azure-python)
+
+- [`EnvironmentCredential`](https://learn.microsoft.com/en-us/python/api/azure-identity/azure.identity.defaultazurecredential?view=azure-python)
+- [`WorkloadIdentityCredential`](https://learn.microsoft.com/en-us/python/api/azure-identity/azure.identity.workloadidentitycredential?view=azure-python)
+- [`ManagedIdentityCredential`](https://learn.microsoft.com/en-us/python/api/azure-identity/azure.identity.managedidentitycredential?view=azure-python)
+- [`AzureCliCrendtial`](https://learn.microsoft.com/en-us/python/api/azure-identity/azure.identity.azureclicredential?view=azure-python)
+- [`AzurePowerShellCrendeital`](https://learn.microsoft.com/en-us/python/api/azure-identity/azure.identity.azurepowershellcredential?view=azure-python)
+- [`AzureDevleoperCliCredential`](https://learn.microsoft.com/en-us/python/api/azure-identity/azure.identity.azurepowershellcredential?view=azure-python)
 
 To pass keyword arguments to the credential constructs use `--auth-opt` option. This option can be used multiple times, one instance per keyword argument. 
 
