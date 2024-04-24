@@ -109,7 +109,7 @@ class Node:
         """Print node nicely"""
         s = f"Path to node: {self.path}"
 
-        s += f"\nAcls from input:"
+        s += "\nAcls from input:"
         for acl in self.acls:
             s += f"\n\t{str(acl)}"
 

@@ -55,9 +55,11 @@ class Orchestrator:
 
 
 class ClientWithACLSupport(ABC):
+    @staticmethod
     @abstractmethod
     def get_access_control(): ...
 
+    @staticmethod
     @abstractmethod
     def set_access_control(): ...
 
@@ -124,9 +126,9 @@ class Processor(ABC):
     @abstractmethod
     def get_dir_client() -> ClientWithACLSupport: ...
 
-    @staticmethod
-    @abstractmethod
-    def update_acls(): ...
+    # @staticmethod
+    # @abstractmethod
+    # def update_acls(): ...
 
 
 class ProcessorRoot(Processor):
@@ -138,7 +140,7 @@ class ProcessorRoot(Processor):
         log.info("PROCESSING NODE ===========")
         log.info(node)
         if node.is_root == False:
-            raise ValueError(f"Node is not the root!")
+            raise ValueError("Node is not the root!")
 
         try:
             fs_client = client.create_file_system(node.name)
@@ -152,9 +154,9 @@ class ProcessorRoot(Processor):
         super(ProcessorRoot, ProcessorRoot).set_acls(node, client)
         client.close()
 
-    @staticmethod
-    def update_acls():
-        pass
+    # @staticmethod
+    # def update_acls():
+    #    pass
 
 
 class ProcessorDir(Processor):
@@ -176,9 +178,9 @@ class ProcessorDir(Processor):
     def set_acls(node: Node, client: DataLakeDirectoryClient):
         super(ProcessorDir, ProcessorDir).set_acls(node, client)
 
-    @staticmethod
-    def update_acls():
-        pass
+    # @staticmethod
+    # def update_acls():
+    #    pass
 
 
 def processor_selector(node):
