@@ -55,8 +55,15 @@ Usage: adls-acl set-acl [OPTIONS] FILE
   Read and set direcotry structure and ACLs from a YAML file.
 
 Options:
-  --help  Show this message and exit.
+  --auth-method [default|environment|workload|managedid|azurecli|azureps|azuredevcli]
+                                  Azure AD Authentication method
+  --auth-opt <TEXT TEXT>...       Keyword arguments to pass to Azure SDK
+                                  credential constructor
+  --help                          Show this message and exit.
 ```
+Options:
+ * `--auth-method` allows the user to choose from a Azure Python SDK [Authentication methods](#authentication-methods)
+ * `--auth-opt` keyword arguments to be passed to the Azure Python SDK authentication constructors. Can be used multiple times in a call.
 
 To set acls from an input file `test.yml` the shell command would look like:
 ```bash
@@ -70,12 +77,20 @@ Usage: adls-acl get-acl [OPTIONS] ACCOUNT_NAME OUTFILE
   Read the current fs and acls on dirs.
 
 Options:
-  --omit-special        Omit special ACLs when reading the account.
-  --help                Show this message and exit.
+  --omit-special                  Omit special ACLs when reading the account.
+  --auth-method [default|environment|workload|managedid|azurecli|azureps|azuredevcli]
+                                  Azure AD Authentication method
+  --auth-opt <TEXT TEXT>...       Keyword arguments to pass to Azure SDK
+                                  credential constructor
+  --help                          Show this message and exit.
 ```
 
 This will print the current filesystem of an account (directories only, no files) and their ACLs to a file on a path pass as `OUTFILE` argument.
-[Special ACLs](#special-acls) can be omitted with a flag `--omit-special`
+Options:
+ * `--omit-special` [Special ACLs](#special-acls) can be omitted and not printed to the output file 
+ * `--auth-method` allows the user to choose from a Azure Python SDK [Authentication methods](#authentication-methods)
+ * `--auth-opt` keyword arguments to be passed to the Azure Python SDK authentication constructors. Can be used multiple times in a call. 
+
 
 To read ACLs of a ADLS storage account named `testaccount` to file `dump.yml`:
 ```bash
@@ -225,3 +240,21 @@ Moreover, any subdirectories that exist in the account but are not specified in 
 
 Future releases will allow for more control over this behaviour (i.e, updating default ACLs on all files created prior to the change of ACLs).
 
+### Authentication Methods
+
+The Azure Python SDK authentication is by default handled with [`DefaultAzureCredenial`](https://learn.microsoft.com/en-us/python/api/azure-identity/azure.identity.defaultazurecredential?view=azure-python).
+
+In addition, a user can target one of the supported Azure Python SDK, by using `--auth-method` option:
+-[`EnvironmentCredential`](https://learn.microsoft.com/en-us/python/api/azure-identity/azure.identity.defaultazurecredential?view=azure-python)
+-[`WorkloadIdentityCredential`](https://learn.microsoft.com/en-us/python/api/azure-identity/azure.identity.workloadidentitycredential?view=azure-python)
+-[`ManagedIdentityCredential`](https://learn.microsoft.com/en-us/python/api/azure-identity/azure.identity.managedidentitycredential?view=azure-python)
+-[`AzureCliCrendtial`](https://learn.microsoft.com/en-us/python/api/azure-identity/azure.identity.azureclicredential?view=azure-python)
+-[`AzurePowerShellCrendeital`](https://learn.microsoft.com/en-us/python/api/azure-identity/azure.identity.azurepowershellcredential?view=azure-python)
+-[`AzureDevleoperCliCredential`](https://learn.microsoft.com/en-us/python/api/azure-identity/azure.identity.azurepowershellcredential?view=azure-python)
+
+To pass keyword arguments to the credential constructs use `--auth-opt` option. This option can be used multiple times, one instance per keyword argument. 
+
+e.g. to pass `managed_identity_client_id` and `exclude_cli_credential` to `DefaultAzureCredental`:
+```
+--auth-method default --auth-opt managed_identity_client_id xxxx-xxxx-xxxxx --auth-opt exlcude_cli_credential False
+```

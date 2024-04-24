@@ -39,7 +39,12 @@ def cli(debug, silent, log_file, root_logger=root_logger):
     default="default",
     help="Azure AD Authentication method",
 )
-@click.option("--auth-opt", type=click.Tuple([str, str]), multiple=True)
+@click.option(
+    "--auth-opt",
+    type=click.Tuple([str, str]),
+    multiple=True,
+    help="Keyword arguments to pass to Azure SDK credential constructor",
+)
 def set_acl(file, auth_method, auth_opt):
     """Read and set direcotry structure and ACLs from a YAML file."""
     auth_opt = {x[0]: x[1] for x in auth_opt}
@@ -72,7 +77,12 @@ def set_acl(file, auth_method, auth_opt):
     default="default",
     help="Azure AD Authentication method",
 )
-@click.option("--auth-opt", type=click.Tuple([str, str]), multiple=True)
+@click.option(
+    "--auth-opt",
+    type=click.Tuple([str, str]),
+    multiple=True,
+    help="Keyword arguments to pass to Azure SDK credential constructor",
+)
 def get_acl(account_name, outfile, omit_special, auth_method, auth_opt):
     """Read the current fs and acls on dirs."""
     data = Orchestrator(
