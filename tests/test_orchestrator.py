@@ -1,22 +1,15 @@
+from unittest.mock import call
+
+import azure.identity
+import azure.storage.filedatalake
 import pytest
+
 from adls_acl import orchestrator as o
 from adls_acl.nodes import Acl, Node
-import azure.storage.filedatalake
-import azure.identity
-from unittest.mock import call
 
 
 def test_processor_selector():
     pass
-
-
-def test__get_service_client_token_credential():
-    sc = o._get_service_client_token_credential("test")
-
-    assert isinstance(
-        sc, azure.storage.filedatalake._data_lake_service_client.DataLakeServiceClient
-    )
-    assert sc.account_name == "test"
 
 
 @pytest.fixture

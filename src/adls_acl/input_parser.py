@@ -1,7 +1,8 @@
-import yamale
-import pkgutil
 import logging
+import pkgutil
 from typing import Dict
+
+import yamale
 
 log = logging.getLogger(__name__)
 

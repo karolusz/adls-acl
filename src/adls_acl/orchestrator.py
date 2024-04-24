@@ -3,19 +3,21 @@ from azure.storage.filedatalake import (
     DataLakeServiceClient,
     DataLakeDirectoryClient,
 )
-from azure.identity import DefaultAzureCredential, AzureCliCredential
 from azure.core.exceptions import ResourceExistsError
 from abc import ABC, abstractmethod
-from typing import Set, Dict
+from typing import Set, Dict, Any
 
 from .nodes import Node, bfs, Acl, find_node_by_name
+from .auth import get_service_client
 
 log = logging.getLogger(__name__)
 
 
 class Orchestrator:
-    def __init__(self, account_name: str):
-        self.sc = _get_service_client_token_credential(account_name)
+    def __init__(
+        self, account_name: str, auth_method: str = "default", **auth_kwargs: Any
+    ):
+        self.sc = get_service_client(account_name, auth_method, **auth_kwargs)
         self.account_name = account_name
 
     def process_tree(self, root):
@@ -53,23 +55,17 @@ class Orchestrator:
 
 
 class ClientWithACLSupport(ABC):
+    @staticmethod
     @abstractmethod
     def get_access_control(): ...
 
+    @staticmethod
     @abstractmethod
     def set_access_control(): ...
 
     # Not needed until update mode is implemented
     # @abstractmethod
     # def update_permissions_recursively(): ...
-
-
-def _get_service_client_token_credential(account_name: str) -> DataLakeServiceClient:
-    account_url = f"https://{account_name}.dfs.core.windows.net"
-    token_credential = DefaultAzureCredential()
-    service_client = DataLakeServiceClient(account_url, credential=token_credential)
-
-    return service_client
 
 
 def _filter_acls_to_preserve(current_acls: Set[Acl]) -> Set[Acl]:
@@ -113,7 +109,8 @@ class Processor(ABC):
     @abstractmethod
     def set_acls(node: Node, client: DataLakeDirectoryClient):
         # Get current ACLs to preseve ACLs for
-        # Owner, Owner Group, mask, and other (unless specified in input)
+        # Owner, Owner Group, mask, and other
+        # they will only change if specifie in input
         current_acls = _get_current_acls(client)
         acls_to_preserve = _filter_acls_to_preserve(current_acls)
         acls_to_pushdown = set([acl for acl in node.acls if acl.is_default()])
@@ -129,9 +126,9 @@ class Processor(ABC):
     @abstractmethod
     def get_dir_client() -> ClientWithACLSupport: ...
 
-    @staticmethod
-    @abstractmethod
-    def update_acls(): ...
+    # @staticmethod
+    # @abstractmethod
+    # def update_acls(): ...
 
 
 class ProcessorRoot(Processor):
@@ -143,7 +140,7 @@ class ProcessorRoot(Processor):
         log.info("PROCESSING NODE ===========")
         log.info(node)
         if node.is_root == False:
-            raise ValueError(f"Node is not the root!")
+            raise ValueError("Node is not the root!")
 
         try:
             fs_client = client.create_file_system(node.name)
@@ -157,9 +154,9 @@ class ProcessorRoot(Processor):
         super(ProcessorRoot, ProcessorRoot).set_acls(node, client)
         client.close()
 
-    @staticmethod
-    def update_acls():
-        pass
+    # @staticmethod
+    # def update_acls():
+    #    pass
 
 
 class ProcessorDir(Processor):
@@ -181,9 +178,9 @@ class ProcessorDir(Processor):
     def set_acls(node: Node, client: DataLakeDirectoryClient):
         super(ProcessorDir, ProcessorDir).set_acls(node, client)
 
-    @staticmethod
-    def update_acls():
-        pass
+    # @staticmethod
+    # def update_acls():
+    #    pass
 
 
 def processor_selector(node):
