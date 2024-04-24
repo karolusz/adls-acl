@@ -47,6 +47,10 @@ Commands:
   get-acl  Read the current fs and acls on dirs.
   set-acl  Read and set direcotry structure and ACLs from a YAML file.
 ```
+Options:
+* `--debug` log levels for the adls-acl and Azure SDK libraries will be set to `DEBUG`
+* `--silent` nothing gets printed to stdout.
+* `--log-file` a copy of log messages will be printed to that file
 
 #### `set-acl` command
 ```
