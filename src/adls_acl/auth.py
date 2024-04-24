@@ -12,6 +12,16 @@ from azure.storage.filedatalake import DataLakeServiceClient
 from abc import ABC, abstractmethod
 from typing import Any
 
+AUTH_SUPPORTED_OPTIONS = [
+    "default",
+    "environment",
+    "workload",
+    "managedid",
+    "azurecli",
+    "azureps",
+    "azuredevcli",
+]
+
 
 class Credential(ABC):
     @staticmethod
@@ -36,6 +46,9 @@ def get_service_client(
 
 
 def token_credential_strategy(auth_method: str) -> Credential:
+    if auth_method not in AUTH_SUPPORTED_OPTIONS:
+        raise ValueError(f"Method {auth_method} not supported")
+
     strats = {}
     strats["default"] = DefaultAzureCredential
     strats["environment"] = EnvironmentCredential

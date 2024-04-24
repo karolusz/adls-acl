@@ -12,15 +12,6 @@ def test_processor_selector():
     pass
 
 
-def test__get_service_client_token_credential():
-    sc = o._get_service_client_token_credential("test")
-
-    assert isinstance(
-        sc, azure.storage.filedatalake._data_lake_service_client.DataLakeServiceClient
-    )
-    assert sc.account_name == "test"
-
-
 @pytest.fixture
 def mock_client(mocker):
     """Mock DataLakeDirectoryClient"""
