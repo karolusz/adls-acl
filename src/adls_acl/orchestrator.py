@@ -21,10 +21,23 @@ class Orchestrator:
         self.account_name = account_name
 
     def process_tree(self, root):
+        # First pass to set non-recursive ACLs and materialzie new nodes
+        # in the account
         for node in bfs(root):
+            log.info("PROCESSING NODE ===========")
+            log.info(node)
             processor = processor_selector(node)
             dc = processor.get_dir_client(node, self.sc)
             processor.set_acls(node, dc)
+
+        # Second pass to set recursive ACLs
+        for node in bfs(root):
+            processor = processor_selector(node)
+            if any([acl.is_recursive() for acl in node.acls]):
+                log.info("Applying recursive ACLs")
+                log.info(f"Path to node: {node.path}")
+                dc = processor.get_dir_client(node, self.sc)
+                processor.update_acls_recursive(node, dc)
 
     def read_account(self, omit_special: bool = False) -> Dict:
         data = {}
@@ -63,9 +76,9 @@ class ClientWithACLSupport(ABC):
     @abstractmethod
     def set_access_control(): ...
 
-    # Not needed until update mode is implemented
-    # @abstractmethod
-    # def update_permissions_recursively(): ...
+    @staticmethod
+    @abstractmethod
+    def update_access_control_recursive(): ...
 
 
 def _filter_acls_to_preserve(current_acls: Set[Acl]) -> Set[Acl]:
@@ -104,6 +117,23 @@ def _pushdown_acls(node: Node, acls: Set[Acl]) -> None:
         child_node.acls.update(acls)
 
 
+def _update_access_control_recursive(
+    client: DataLakeDirectoryClient, acls: Set[Acl], retries: int = 3
+) -> None:
+    """Update ACLs. The easiest way to apply ACLs recusively.
+    https://learn.microsoft.com/en-us/python/api/azure-storage-file-datalake/azure.storage.filedatalake.datalakedirectoryclient?view=azure-python#azure-storage-filedatalake-datalakedirectoryclient-update-access-control-recursive
+    """
+    for acl in acls:
+        continuation_token = None
+        for i in range(0, retries):
+            change_result = client.update_access_control_recursive(
+                acl=acl, continue_on_failure=True, continuation_token=continuation_token
+            )
+            continuation_token = change_result.get("continue")
+            if continuation_token is None:
+                break
+
+
 class Processor(ABC):
     @staticmethod
     @abstractmethod
@@ -126,9 +156,14 @@ class Processor(ABC):
     @abstractmethod
     def get_dir_client() -> ClientWithACLSupport: ...
 
-    # @staticmethod
-    # @abstractmethod
-    # def update_acls(): ...
+    @staticmethod
+    @abstractmethod
+    def update_acls_recursive(node: Node, client: DataLakeDirectoryClient) -> None:
+        recursive_acls = set([acl for acl in node.acls if acl.is_recursive()])
+        log.info("Recursive Acls:")
+        for acl in recursive_acls:
+            log.info(f"\t {acl}")
+        _update_access_control_recursive(client, recursive_acls, retries=3)
 
 
 class ProcessorRoot(Processor):
@@ -137,8 +172,6 @@ class ProcessorRoot(Processor):
     def get_dir_client(node: Node, client: DataLakeServiceClient):
         """Creates a container if it doesn't exist and returns a file clietn
         to its root directory."""
-        log.info("PROCESSING NODE ===========")
-        log.info(node)
         if node.is_root == False:
             raise ValueError("Node is not the root!")
 
@@ -154,9 +187,10 @@ class ProcessorRoot(Processor):
         super(ProcessorRoot, ProcessorRoot).set_acls(node, client)
         client.close()
 
-    # @staticmethod
-    # def update_acls():
-    #    pass
+    @staticmethod
+    def update_acls_recursive(node: Node, client: DataLakeDirectoryClient):
+        super(ProcessorRoot, ProcessorRoot).update_acls_recursive(node, client)
+        client.close()
 
 
 class ProcessorDir(Processor):
@@ -165,9 +199,6 @@ class ProcessorDir(Processor):
     def get_dir_client(node: Node, client: DataLakeServiceClient):
         """Creates a directory, if it doesn't exist and returns a directory
         client."""
-        log.info("PROCESSING NODE ===========")
-        log.info(node)
-
         folder_client = client.get_file_system_client(file_system=node.get_root().name)
         dir_client = folder_client.get_directory_client(node.path_in_file_system)
         dir_client.create_directory()
@@ -178,9 +209,10 @@ class ProcessorDir(Processor):
     def set_acls(node: Node, client: DataLakeDirectoryClient):
         super(ProcessorDir, ProcessorDir).set_acls(node, client)
 
-    # @staticmethod
-    # def update_acls():
-    #    pass
+    @staticmethod
+    def update_acls_recursive(node: Node, client: DataLakeDirectoryClient):
+        super(ProcessorDir, ProcessorDir).update_acls_recursive(node, client)
+        client.close()
 
 
 def processor_selector(node):

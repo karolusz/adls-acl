@@ -8,6 +8,7 @@ class Acl:
     oid: str
     permissions: str
     scope: Optional[str] = None
+    recursive: Optional[bool] = False
 
     @classmethod
     def from_str(cls, acl_str: str):
@@ -23,14 +24,18 @@ class Acl:
     @classmethod
     def from_dict(cls, acl_dict: Dict):
         """Returns an instance of Acl from a dict from yaml input"""
+        recursive = False
+        scope = None
         if "acl" in acl_dict:
             acl = acl_dict["acl"]
         if "scope" in acl_dict:
             scope = acl_dict["scope"]
-        else:
-            scope = None
+        if "recursive" in acl_dict:
+            recursive = acl_dict["recursive"]
 
-        acl = Acl(acl_dict["type"], acl_dict["oid"], acl, scope=scope)
+        acl = Acl(
+            acl_dict["type"], acl_dict["oid"], acl, scope=scope, recursive=recursive
+        )
         return acl
 
     def __str__(self):
@@ -84,6 +89,10 @@ class Acl:
             )
             else False
         )
+
+    def is_recursive(self):
+        """Check if the ACL is supposed to be applied recursively"""
+        return self.recursive
 
     def to_yaml(self):
         """Returns a dict reprentaion"""
