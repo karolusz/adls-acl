@@ -189,7 +189,8 @@ A list of objects describing subdirectories.
 oid: string. # Required. Security principal Object ID in Microsoft Entra ID.
 type: string # Required. Security principal type.
 acl: string 
-scope: string. 
+scope: string
+recursive: bool
 ```
 `oid` string. Required.
 Object ID of the principal (user/group/managed identity/service principal) in Microsoft Entra (former Azure Active Directory).
@@ -204,6 +205,9 @@ e.g.:
 
 `scope` string. Optional
 If set to `default` it will set the specified ACLs as `default ACLs` [MS DOCS: Types of ACLs](https://learn.microsoft.com/en-us/azure/storage/blobs/data-lake-storage-access-control#types-of-acls). If not present, ACLs will be set as `access ACLs`.
+
+`recursive` bool. Optional
+If set to `True` that ACL will be applied recursively to every subdirectroy and file inside the directory this ACL is to be set on.
 
 #### Special ACLs
 
@@ -243,6 +247,7 @@ They will not be set on any files that had existed in the directories prior to t
 Moreover, any subdirectories that exist in the account but are not specified in the input file remain untouched by `adls-acl`.
 
 Future releases will allow for more control over this behaviour (i.e, updating default ACLs on all files created prior to the change of ACLs).
+
 
 ### Authentication Methods
 
