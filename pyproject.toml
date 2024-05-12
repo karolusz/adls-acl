@@ -2,6 +2,49 @@
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "adls_acl"
+version = "0.1.0"
+authors = [{ name = "Karol Luszczek" }]
+description = "A small tool for managing Azure DataLake Store (ADLS) Access Control Lists (ACLs)."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.12"
+dependencies = [
+    "yamale",
+    "azure-storage-file-datalake",
+    "azure-identity",
+    "click",
+]
+classifiers = [
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+]
+
+[project.urls]
+Repository = "https://github.com/karolusz/adls-acl"
+
+[project.scripts]
+adls-acl = "adls_acl.cli:cli"
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-cov", "pytest-mock", "bumpver"]
+
+# ---
+# Setuptools
+# ---
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# ---
+# BumpVer
+# ---
 [tool.bumpver]
 current_version = "0.1.0"
 version_pattern = "MAJOR.MINOR.PATCH[PYTAGNUM]"
@@ -15,12 +58,5 @@ tag = true
 push = true
 
 [tool.bumpver.file_patterns]
-"pyproject.toml" = [
-    'current_version = "{version}"',
-]
-"setup.py" = [
-    "{version}",
-]
-"src/adls_acl/__init__.py" = ["{version}",]
-
-
+"pyproject.toml" = ['current_version = "{version}"', 'version = "{version}"']
+"src/adls_acl/__init__.py" = ["{version}"]
